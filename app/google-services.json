@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "634293458",
+    "firebase_url": "https://chat-489b4.firebaseio.com",
+    "project_id": "chat-489b4",
+    "storage_bucket": "chat-489b4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:634293458:android:832862f2a096f414",
+        "android_client_info": {
+          "package_name": "com.taisys.sc.securechat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "634293458-43ncpunm4gcntbpi4sre0n3b654msu4l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taisys.sc.securechat",
+            "certificate_hash": "816ad4e87bf0b60c47f6b029111d52b8a43f0794"
+          }
+        },
+        {
+          "client_id": "634293458-hivfn16gg4rtfd7s7rm1ecnalipd6hgs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVHWUV5RaQh5sr9U4DVnjyrBTyBrkztIQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "634293458-hivfn16gg4rtfd7s7rm1ecnalipd6hgs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
