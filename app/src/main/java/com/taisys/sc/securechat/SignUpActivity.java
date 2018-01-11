@@ -361,7 +361,7 @@ public static int getPlainTextLength(byte[] bytes){
     if (bytes == null || bytes.length == 0) return 0;
     int i = 0;
     for (i=0;i<bytes.length;i++){
-        Log.d("SecureChat", "i=" + String.valueOf(i) + ", data=" + bytes[i]);
+        //Log.d("SecureChat", "i=" + String.valueOf(i) + ", data=" + bytes[i]);
         if (bytes[i] == -1) break;
     }
     return i;
