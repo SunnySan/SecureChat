@@ -188,9 +188,10 @@ public class SignUpActivity extends AppCompatActivity {
             }
 
             begintime = System.currentTimeMillis();
-            String src = "testtesttesttest";
+            String src = "test";
             src = byte2Hex(stringToBytesUTFCustom(src));
-            src = "7465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374";
+            //src = "7465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374";
+            src = paddingString(src, 256);
             Toast.makeText(SignUpActivity.this, "src=" + src, Toast.LENGTH_LONG).show();
             res = mCard.RSAPubKeyCalc(src, 0x0201);
             begintime = System.currentTimeMillis() - begintime;
@@ -318,6 +319,16 @@ public static byte[] stringToBytesUTFCustom(String str) {
     return b;
 }
 
+public static String paddingString(String src, int length){
+    int i = (src.length()*2)%length;    //餘數
+    if (i==0) return src;
+
+    int l = 0;
+    for (l=0;l<i;l++){
+        src += "FF";
+    }
+    return src;
+}
 /*************************************************************************************/
 
 }
