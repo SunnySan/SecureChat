@@ -169,39 +169,64 @@ public class SignUpActivity extends AppCompatActivity {
             begintime = System.currentTimeMillis() - begintime;
             if (resString != null && resString.equals(Card.RES_OK)) {
                 Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Gen key pair OK!", Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair OK!");
             } else {
                 Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Gen key pair failed!", Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair Failed!");
             }
             */
 
             res = mCard.ReadFile(0x0201, 4, 128);
             if (res != null && res[0].equals(Card.RES_OK)) {
-                Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
+                //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "public key=" + res[1]);
             } else {
                 Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "no public key:" + res[0]);
             }
             res = mCard.ReadFile(0x0201, 132, 3);
             if (res != null && res[0].equals(Card.RES_OK)) {
-                Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
+                //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "public key=" + res[1]);
             } else {
                 Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "no public key:" + res[0]);
             }
 
             begintime = System.currentTimeMillis();
-            String src = "test";
+            String src = "test台灣宏碁testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt128testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest255";
             src = byte2Hex(stringToBytesUTFCustom(src));
             //src = "7465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374";
             src = paddingString(src, 256);
-            Toast.makeText(SignUpActivity.this, "src=" + src, Toast.LENGTH_LONG).show();
+            Log.d("SecureChat", "src=" + src);
+            //Toast.makeText(SignUpActivity.this, "src=" + src, Toast.LENGTH_LONG).show();
             res = mCard.RSAPubKeyCalc(src, 0x0201);
             begintime = System.currentTimeMillis() - begintime;
 
             if (res != null && res[0].equals(Card.RES_OK)) {
-                Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + res[1], Toast.LENGTH_SHORT).show();
+                //Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + res[1], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "encrypt data successfully, time:" + begintime + "ms, " + res[1]);
                 mNameSignUpEditText.setText(res[1]);
+
+                begintime = System.currentTimeMillis();
+                res = mCard.RSAPriKeyCalc(res[1], true, 0x0301);
+                begintime = System.currentTimeMillis() - begintime;
+                if (res != null && res[0].equals(Card.RES_OK)) {
+                    Log.d("SecureChat", "decrypt data successfully, time:" + begintime + "ms, " + res[1]);
+                    mNameSignUpEditText.setText(res[1]);
+                    src = bytesToStringUTFCustom(hex2Byte(res[1]));
+                    src = src.substring(0, getPlainTextLength(hex2Byte(res[1]))/2);
+                    Log.d("SecureChat", "Source string=" + src);
+                    mNameSignUpEditText.setText(src);
+                } else {
+                    Toast.makeText(SignUpActivity.this, "decrypt data failed, time:" + begintime + "ms\n" + "Error code: "
+                            + res[0], Toast.LENGTH_SHORT).show();
+                    Log.d("SecureChat", "decrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
+                }
             } else {
                 Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Error code: "
                         + res[0], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "encrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
             }
 
         } else {
@@ -320,14 +345,26 @@ public static byte[] stringToBytesUTFCustom(String str) {
 }
 
 public static String paddingString(String src, int length){
-    int i = (src.length()*2)%length;    //餘數
+    int i = (src.length()/2)%length;    //餘數
     if (i==0) return src;
 
     int l = 0;
+    i = length - i;
     for (l=0;l<i;l++){
         src += "FF";
     }
     return src;
+}
+
+//'將byte array中ascii = 0xFF的剔除，取得未被padding的原始字串長度
+public static int getPlainTextLength(byte[] bytes){
+    if (bytes == null || bytes.length == 0) return 0;
+    int i = 0;
+    for (i=0;i<bytes.length;i++){
+        Log.d("SecureChat", "i=" + String.valueOf(i) + ", data=" + bytes[i]);
+        if (bytes[i] == -1) break;
+    }
+    return i;
 }
 /*************************************************************************************/
 
