@@ -185,10 +185,13 @@ public class UpdateProfileActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Log.d("SecureChat", "camera image ok");
             Bundle extras = data.getExtras();
-            //imageBitmap = (Bitmap) extras.get("data");
-            imageBitmap = data.getExtras().getParcelable("data");
+            imageBitmap = (Bitmap) extras.get("data");
+            //imageBitmap = data.getExtras().getParcelable("data");
             Log.d("SecureChat", "camera image ok, imageBitmap= " + imageBitmap.toString());
-            setMyImage();
+            Bitmap resized = Bitmap.createScaledBitmap(imageBitmap, 100, 100, true);
+            mUserPhotoImageView.setImageBitmap(resized);
+            mUserPhotoImageView.invalidate();
+            //setMyImage();
 
             //Picasso.with(UpdateProfileActivity.this).load(outputFileUri).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
             /*
