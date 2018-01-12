@@ -3,11 +3,15 @@ package com.taisys.sc.securechat;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -29,6 +33,10 @@ import com.squareup.picasso.Picasso;
 import com.taisys.sc.securechat.model.User;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +49,8 @@ public class UpdateProfileActivity extends AppCompatActivity {
     private EditText mUserNameEdit;
     private Button mUpdateProfileBtn;
 
+    private Uri outputFileUri;
+    private Bitmap imageBitmap = null;
     private byte[] byteArray = null;
     private DatabaseReference mUserDBRef;
     private StorageReference mStorageRef;
@@ -140,6 +150,7 @@ public class UpdateProfileActivity extends AppCompatActivity {
         });
     }
 
+
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -150,16 +161,59 @@ public class UpdateProfileActivity extends AppCompatActivity {
     private void pickPhotoFromGallery(){
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
+        photoPickerIntent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(photoPickerIntent, REQUEST_IMAGE_PICK);
     }
 
+    private void setMyImage(){
+        mUserPhotoImageView.setImageBitmap(imageBitmap);
+        mUserPhotoImageView.post(new Runnable() {
+            @Override
+            public void run() {
+                mUserPhotoImageView.setVisibility(View.GONE);
+                mUserPhotoImageView.setVisibility(View.VISIBLE);
+            }
+        });
+
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d("SecureChat", "requestCode= " + String.valueOf(requestCode));
+        Log.d("SecureChat", "resultCode= " + String.valueOf(resultCode));
+        Log.d("SecureChat", "data= " + data.toString());
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Log.d("SecureChat", "camera image ok");
             Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            mUserPhotoImageView.setImageBitmap(imageBitmap);
+            //imageBitmap = (Bitmap) extras.get("data");
+            imageBitmap = data.getExtras().getParcelable("data");
+            Log.d("SecureChat", "camera image ok, imageBitmap= " + imageBitmap.toString());
+            setMyImage();
+
+            //Picasso.with(UpdateProfileActivity.this).load(outputFileUri).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
+            /*
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mUserPhotoImageView.setVisibility(View.GONE);
+                    mUserPhotoImageView.setImageBitmap(imageBitmap);
+                    mUserPhotoImageView.setVisibility(View.VISIBLE);
+                }
+            });
+            */
+
+
+            /*
+            mUserPhotoImageView.setVisibility(View.VISIBLE);
+            mUserPhotoImageView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mUserPhotoImageView.setVisibility(View.GONE);
+                    mUserPhotoImageView.setVisibility(View.VISIBLE);
+                }
+            });
+            */
+
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -167,9 +221,18 @@ public class UpdateProfileActivity extends AppCompatActivity {
             byteArray = stream.toByteArray();
 
         }else if(requestCode == REQUEST_IMAGE_PICK && resultCode == RESULT_OK){
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            imageBitmap = data.getExtras().getParcelable("data");
+            /*
+                        Log.d("SecureChat", "pick image ok, data= " + data.toString());
+                        Bundle extras = data.getExtras();
+                        Log.d("SecureChat", "pick image ok, extras= " + extras.toString());
+
+                        Bitmap imageBitmap = (Bitmap) extras.get("data");
+                        */
+            Log.d("SecureChat", "pick image ok, imageBitmap= " + imageBitmap.toString());
             mUserPhotoImageView.setImageBitmap(imageBitmap);
+            Log.d("SecureChat", "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()));
+
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();

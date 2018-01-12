@@ -114,12 +114,13 @@ public class ChatUsersActivity extends AppCompatActivity {
         } else {
             // No user is signed in
             /**go to login user first**/
-            goToSignIn();
+            goToHome();
         }
     }
 
-    private void goToSignIn(){
-        startActivity(new Intent(this, LoginActivity.class));
+    private void goToHome(){
+        finish();
+        //startActivity(new Intent(this, LoginActivity.class));
     }
 
     @Override
@@ -145,8 +146,9 @@ public class ChatUsersActivity extends AppCompatActivity {
 
     private void logOutuser(){
         FirebaseAuth.getInstance().signOut();
+        goToHome();
         //now send user back to login screen
-        startActivity(new Intent(this, LoginActivity.class));
+        //startActivity(new Intent(this, LoginActivity.class));
     }
 
     private void goToUpdateUserProfile(){

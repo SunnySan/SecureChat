@@ -356,7 +356,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 public void onComplete(@NonNull Task<Void> task) {
                                     disWaiting();
                                     if (task.isSuccessful()) {
-                                        Log.d("SecureChat", "User profile updated.");
+                                        Log.d("SecureChat", "User profile updated. Display name= " + newUser.getDisplayName());
                                         /***CREATE USER IN FIREBASE DB AND REDIRECT ON SUCCESS**/
                                         createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
 
