@@ -1,6 +1,7 @@
 package com.taisys.sc.securechat;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,7 +10,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -22,24 +22,22 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.taisys.oti.Card;
 import com.taisys.oti.Card.SCSupported;
 import com.taisys.sc.securechat.model.User;
+import com.taisys.sc.securechat.util.Utility;
 
 public class SignUpActivity extends AppCompatActivity {
+    private Card mCard = new Card();
+    private ProgressDialog pg = null;
+    private Context myContext = null;
+    private String iccid = null;
 
     //views
     private EditText mNameSignUpEditText;
-    private EditText mEmailSignUpEditText;
-    private EditText mPasswordEditText;
     private Button mSignUpButton;
-    private Button mGoToLoginButton;
+    private Button mCancelButton;
 
     //Firebase
     private FirebaseAuth mAuth;
     private DatabaseReference mUsersDBref;
-
-    private ProgressDialog mDialog;
-
-    private Card mCard = new Card();
-    String iccid = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,48 +45,22 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up);
 
         //assign the views
-        mNameSignUpEditText = (EditText)findViewById(R.id.nameSignUpEditText);
-        mEmailSignUpEditText = (EditText)findViewById(R.id.emailSignUpEditText);
-        mPasswordEditText = (EditText)findViewById(R.id.passwordSignUpEditText);
-        mSignUpButton = (Button)findViewById(R.id.signUpButton);
-        mGoToLoginButton = (Button)findViewById(R.id.goToLogIn);
+        mNameSignUpEditText = (EditText)findViewById(R.id.editTextSignUpName);
+        mSignUpButton = (Button)findViewById(R.id.btnSignUpConfirm);
+        mCancelButton = (Button)findViewById(R.id.btnSignUpCancel);
+
+        myContext = this;
 
         //firebase assign
         mAuth = FirebaseAuth.getInstance();
 
-        //dialog
-        mDialog = new ProgressDialog(this);
+        iccid = Utility.getMySetting(myContext, "iccid");
+        if (iccid==null || iccid.length()<1){
+            Utility.showMessage(myContext, getString(R.string.msgUnableToGetIccid));
+            finish();
+        }
 
-        /**listen to sign up button click**/
-        mSignUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String name = mNameSignUpEditText.getText().toString();
-                String email = mEmailSignUpEditText.getText().toString().trim();
-                String password = mPasswordEditText.getText().toString().trim();
-
-
-                if(name.isEmpty()){
-                    Toast.makeText(SignUpActivity.this, "Name cannot be empty!", Toast.LENGTH_SHORT).show();
-                }else if(email.isEmpty()){
-                    Toast.makeText(SignUpActivity.this, "Email cannot be empty!", Toast.LENGTH_SHORT).show();
-                }else if(password.isEmpty()){
-                    Toast.makeText(SignUpActivity.this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
-                }else{
-                    signUpUserWithFirebase(name, email, password);
-                }
-            }
-        });
-
-        /**listen to go to login button**/
-        mGoToLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                goToLoginActivity();
-            }
-        });
-
-        initCard();
+        setOnClickListener();
 
     }
 
@@ -105,38 +77,78 @@ public class SignUpActivity extends AppCompatActivity {
         this.finish();
     }
 
-    private void initCard(){
-        //顯示Progress對話視窗
-        //mDialog.setMessage("Please wait...");
-        //mDialog.show();
-        //if (1==1)return;
-        //utility.showToast(myContext, getString(R.string.msgReadCardInfo));
-        //showWaiting(getString(R.string.pleaseWait), getString(R.string.msgReadCardInfo));
-
-        mCard.OpenSEService(this, "A000000018506373697A672D63617264",
-                new SCSupported() {
-
-                    @Override
-                    public void isSupported(boolean success) {
-                        if (!success) {
-                            //手機不支援OTI
-                            Toast.makeText(SignUpActivity.this, "Unable to read credential information from SIM card, please make sure your thin SIM is correctly installed.", Toast.LENGTH_LONG).show();
-                            return;
-                        }else{
-                            //Toast.makeText(SignUpActivity.this, "OTI OK.", Toast.LENGTH_LONG).show();
-                            getCardInfo();
-                        }
-                    }
-                });
-
+    private void showWaiting(final String title, final String msg) {
+        disWaiting();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                pg = new ProgressDialog(myContext);
+                // }
+                pg.setIndeterminate(true);
+                pg.setCancelable(false);
+                pg.setCanceledOnTouchOutside(false);
+                pg.setTitle(title);
+                pg.setMessage(msg);
+                pg.show();
+            }
+        });
     }
+
+    private void disWaiting() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (pg != null && pg.isShowing()) {
+                    pg.dismiss();
+                }
+            }
+        });
+    }
+
+    private void setOnClickListener(){
+        mSignUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name = mNameSignUpEditText.getText().toString();
+
+                if(name.isEmpty()){
+                    Utility.showMessage(myContext, getString(R.string.labelEnterYourName));
+                    return;
+                }
+
+                //顯示Progress對話視窗
+                showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgGeneratingRsaKey));
+                mCard.OpenSEService(myContext, "A000000018506373697A672D63617264",
+                        new SCSupported() {
+
+                            @Override
+                            public void isSupported(boolean success) {
+                                if (success) {
+                                    //手機支援OTI
+                                    getCardInfo();
+                                } else {
+                                    disWaiting();
+                                    Utility.showMessage(myContext, getString(R.string.msgDoesntSupportOti));
+                                }
+                            }
+                        });
+            }
+        });
+
+        mCancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
+
     private void getCardInfo(){
         String res[] = mCard.GetCardInfo();
-        String myIccid = "";
         String s = "";
         int i = 0;
         int j = 0;
-        //disWaiting();
+
         if (res != null && res[0].equals(Card.RES_OK)) {
             /*
                             res[1] 的結構如下：
@@ -151,30 +163,110 @@ public class SignUpActivity extends AppCompatActivity {
             s = res[1].substring((i+1)*2, (i+1)*2 + 2);
             //utility.showMessage(myContext, s);
             j = Integer.parseInt(s);
-            myIccid = res[1].substring((i+1)*2+2, (i+1)*2+2 + j*2);
+            iccid = res[1].substring((i+1)*2+2, (i+1)*2+2 + j*2);
             //utility.showMessage(myContext, s);
             //i = s.length();
             //utility.showMessage(myContext, String.valueOf(i));
-            iccid = myIccid;
+            Utility.setMySetting(myContext, "iccid", iccid);
             //utility.showToast(this, "CardInfor: " + res[1]);
             //utility.showToast(this, "ICCID= " + iccid);
-            mEmailSignUpEditText.setText(iccid + "@gmail.com");
+            generateRsaKeyPair();
+        } else {
+            disWaiting();
+            Utility.showMessage(myContext, getString(R.string.msgCannotReadCardInfo));
+        }
 
-            long begintime = 0;
+    }
 
-            /*
+
+
+
+
+
+
+
+
+
+
+    private void generateRsaKeyPair(){
+        String res[] = null;
+        String s = "";
+        int i = 0;
+        int j = 0;
+
+        long begintime = 0;
+
+        //產生 RSA key pair
+        begintime = System.currentTimeMillis();
+        String resString = mCard.GenRSAKeyPair(Card.RSA_1024_BITS, 0x0201,
+                0x0301);
+        begintime = System.currentTimeMillis() - begintime;
+        if (resString != null && resString.equals(Card.RES_OK)) {
+            Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair OK!");
+        } else {
+            Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair Failed!");
+            Utility.showMessage(myContext, getString(R.string.msgUnableToGenerateRsaKeyPair) + "error code=" + resString);
+            disWaiting();
+            return;
+        }
+
+        //讀出 public key
+        String publicKey = "";
+        res = mCard.ReadFile(0x0201, 0x0, 264);
+        disWaiting();
+        if (res != null && res[0].equals(Card.RES_OK)) {
+            publicKey = res[1];
+            Log.d("SecureChat", "public key=" + publicKey);
+            String name = mNameSignUpEditText.getText().toString();
+            String email = iccid + "@gmail.com";
+            String password = "111111";
+            signUpUserWithFirebase(name, email, password, publicKey);
+        } else {
+            Utility.showMessage(myContext, getString(R.string.msgFailToReadPublicKey) + "error code=" + res[0]);
+            Log.d("SecureChat", "no public key:" + res[0]);
+            return;
+        }
+
+        /*
+            res = mCard.ReadFile(0x0201, 4, 128);
+            if (res != null && res[0].equals(Card.RES_OK)) {
+                //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
+                publicKey = res[1];
+                Log.d("SecureChat", "public key=" + res[1]);
+            } else {
+                Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
+                Log.d("SecureChat", "no public key:" + res[0]);
+            }
+
+
             begintime = System.currentTimeMillis();
-            String resString = mCard.GenRSAKeyPair(Card.RSA_1024_BITS, 0x0201,
-                    0x0301);
+            resString = mCard
+                    .CreateFile(0x0202, (byte)0x02, 0x0, (byte)0x0, (byte)0x0, (byte)0x0);
             begintime = System.currentTimeMillis() - begintime;
             if (resString != null && resString.equals(Card.RES_OK)) {
-                Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Gen key pair OK!", Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair OK!");
+                Log.d("SecureChat", "Create File success！ time=" + begintime + "ms");
             } else {
-                Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Gen key pair failed!", Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair Failed!");
+                Log.d("SecureChat", "Create File failed！ error code=" + resString);
             }
-            */
+
+
+            String[] res1 = mCard.ReadFile(0x0201, 0x0, 0xf7);
+            String[] res2 = mCard.ReadFile(0x0201, 0xf7, 0x11);
+            mCard.WriteFile(0x0202, 0, res1[1]);
+            mCard.WriteFile(0x0202, 0xf7, res2[1]);
+
+            String[] res1 = mCard.ReadFile(0x0201, 0x0, 264);
+            mCard.WriteFile(0x0202, 0, res1[1]);
+
+            begintime = System.currentTimeMillis();
+            resString = mCard.WriteFile(0x0202, 0, res[1]);
+            begintime = System.currentTimeMillis() - begintime;
+            if (resString != null && resString.equals(Card.RES_OK)) {
+                Log.d("SecureChat", "Write File success！ time=" + begintime + "ms");
+            } else {
+                Log.d("SecureChat", "Write File failed！ error code=" + resString);
+            }
+
 
             res = mCard.ReadFile(0x0201, 4, 128);
             if (res != null && res[0].equals(Card.RES_OK)) {
@@ -184,32 +276,36 @@ public class SignUpActivity extends AppCompatActivity {
                 Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
                 Log.d("SecureChat", "no public key:" + res[0]);
             }
-            res = mCard.ReadFile(0x0201, 132, 3);
-            if (res != null && res[0].equals(Card.RES_OK)) {
-                //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "public key=" + res[1]);
-            } else {
-                Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "no public key:" + res[0]);
-            }
 
             begintime = System.currentTimeMillis();
-            String src = "test台灣宏碁testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt128testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest255";
-            src = byte2Hex(stringToBytesUTFCustom(src));
+            //String src = "test台灣宏碁testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt128testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt256test台灣宏碁testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt128testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttestt512";
+            String src = "test台灣宏碁台灣宏碁test";
+            byte[] srcBytes = stringToBytesUTFCustom(src);
+            src = byte2Hex(srcBytes);
             //src = "7465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374";
             src = paddingString(src, 256);
             Log.d("SecureChat", "src=" + src);
             //Toast.makeText(SignUpActivity.this, "src=" + src, Toast.LENGTH_LONG).show();
-            res = mCard.RSAPubKeyCalc(src, 0x0201);
+            res = mCard.RSAPubKeyCalc(src, 0x0202);
             begintime = System.currentTimeMillis() - begintime;
 
             if (res != null && res[0].equals(Card.RES_OK)) {
                 //Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + res[1], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "encrypt data successfully, time:" + begintime + "ms, " + res[1]);
+                Log.d("SecureChat", "SIM card encrypt data successfully, time:" + begintime + "ms, " + res[1]);
                 mNameSignUpEditText.setText(res[1]);
+
+
+                byte[] encryptionBytes = doRSAEncryption(srcBytes, publicKey, "000000", "RSA/ECB/NoPadding", Cipher.ENCRYPT_MODE);
+                if (encryptionBytes!=null && encryptionBytes.length>0) {
+                    Log.d("SecureChat", "APP encrypt data successfully, bytes=:" + encryptionBytes);
+                }else{
+                    Log.d("SecureChat", "APP encrypt data failed");
+                }
+
 
                 begintime = System.currentTimeMillis();
                 res = mCard.RSAPriKeyCalc(res[1], true, 0x0301);
+                //res = mCard.RSAPriKeyCalc(byte2Hex(encryptionBytes), true, 0x0301);
                 begintime = System.currentTimeMillis() - begintime;
                 if (res != null && res[0].equals(Card.RES_OK)) {
                     Log.d("SecureChat", "decrypt data successfully, time:" + begintime + "ms, " + res[1]);
@@ -232,22 +328,23 @@ public class SignUpActivity extends AppCompatActivity {
         } else {
             Toast.makeText(SignUpActivity.this, "Unable to get your id from SIM card, please make sure your thin SIM is correctly installed.", Toast.LENGTH_LONG).show();
         }
-        //mDialog.dismiss();
+        */
     }
 
-    private void signUpUserWithFirebase(final String name, String email, String password){
-        mDialog.setMessage("Please wait...");
-        mDialog.show();
+    private void signUpUserWithFirebase(final String name, String email, String password, final String publicKey){
+        showWaiting(getString(R.string.msgPleaseWait), getString(R.string.menuAccountSignUp));
 
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(!task.isSuccessful()){
                     //there was an error
-                    mDialog.dismiss();
-                    Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    disWaiting();
+                    Utility.showMessage(myContext, getString(R.string.msgFailToSignUpAccount) + " error= " + task.getException().getLocalizedMessage());
+                    //Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }else{
                     final FirebaseUser newUser = task.getResult().getUser();
+                    Log.d("SecureChat", "set firebase display name=" + name);
                     //success creating user, now set display name as name
                     UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                             .setDisplayName(name)
@@ -257,16 +354,18 @@ public class SignUpActivity extends AppCompatActivity {
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
-                                    mDialog.dismiss();
+                                    disWaiting();
                                     if (task.isSuccessful()) {
-                                        Log.d(SignUpActivity.class.getName(), "User profile updated.");
+                                        Log.d("SecureChat", "User profile updated.");
                                         /***CREATE USER IN FIREBASE DB AND REDIRECT ON SUCCESS**/
-                                        createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail());
+                                        createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
 
                                     }else{
                                         //error
-                                        mDialog.dismiss();
-                                        Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                        disWaiting();
+                                        Utility.showMessage(myContext, getString(R.string.msgFailToSignUpAccount) + " error= " + task.getException().getLocalizedMessage());
+                                        //Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                        return;
                                     }
                                 }
                             });
@@ -276,16 +375,18 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    private void createUserInDb(String userId, String displayName, String email){
+    private void createUserInDb(String userId, final String displayName, String email, String publicKey){
         mUsersDBref = FirebaseDatabase.getInstance().getReference().child("Users");
-        User user = new User(userId, displayName, email);
+        User user = new User(userId, displayName, email, publicKey);
         mUsersDBref.child(userId).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if(!task.isSuccessful()){
                     //error
-                    mDialog.dismiss();
-                    Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    disWaiting();
+                    Utility.showMessage(myContext, getString(R.string.msgFailToSignUpAccount) + " error= " + task.getException().getLocalizedMessage());
+                    //Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    return;
                 }else{
                     //success adding user to db as well
                     //go to users chat list
@@ -295,77 +396,9 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
-    private void goToLoginActivity(){
-        startActivity(new Intent(this, LoginActivity.class));
-    }
-
     private void goToChartUsersActivity(){
         startActivity(new Intent(this, ChatUsersActivity.class));
         finish();
     }
-
-/*************************************************************************************/
-//取得 byte array 每個 byte 的 16 進位碼
-public static String byte2Hex(byte[] b) {
-    String result = "";
-    for (int i=0 ; i<b.length ; i++)
-        result += Integer.toString( ( b[i] & 0xff ) + 0x100, 16).substring( 1 );
-    return result;
-}
-
-//將 16 進位碼的字串轉為 byte array
-public static byte[] hex2Byte(String hexString) {
-    byte[] bytes = new byte[hexString.length() / 2];
-    for (int i=0 ; i<bytes.length ; i++)
-        bytes[i] = (byte) Integer.parseInt(hexString.substring(2 * i, 2 * i + 2), 16);
-    return bytes;
-}
-
-//將 byte array 轉成一個個 char 的字串
-public static String bytesToStringUTFCustom(byte[] bytes) {
-    char[] buffer = new char[bytes.length >> 1];
-    for(int i = 0; i < buffer.length; i++) {
-        int bpos = i << 1;
-        char c = (char)(((bytes[bpos]&0x00FF)<<8) + (bytes[bpos+1]&0x00FF));
-        buffer[i] = c;
-    }
-    return new String(buffer);
-}
-
-//將一個個 char 的字串轉成 byte array
-public static byte[] stringToBytesUTFCustom(String str) {
-    char[] buffer = str.toCharArray();
-    byte[] b = new byte[buffer.length << 1];
-    for(int i = 0; i < buffer.length; i++) {
-        int bpos = i << 1;
-        b[bpos] = (byte) ((buffer[i]&0xFF00)>>8);
-        b[bpos + 1] = (byte) (buffer[i]&0x00FF);
-    }
-    return b;
-}
-
-public static String paddingString(String src, int length){
-    int i = (src.length()/2)%length;    //餘數
-    if (i==0) return src;
-
-    int l = 0;
-    i = length - i;
-    for (l=0;l<i;l++){
-        src += "FF";
-    }
-    return src;
-}
-
-//'將byte array中ascii = 0xFF的剔除，取得未被padding的原始字串長度
-public static int getPlainTextLength(byte[] bytes){
-    if (bytes == null || bytes.length == 0) return 0;
-    int i = 0;
-    for (i=0;i<bytes.length;i++){
-        //Log.d("SecureChat", "i=" + String.valueOf(i) + ", data=" + bytes[i]);
-        if (bytes[i] == -1) break;
-    }
-    return i;
-}
-/*************************************************************************************/
 
 }

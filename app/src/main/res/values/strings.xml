@@ -1,3 +1,20 @@
 <resources>
-    <string name="app_name">SecureChat</string>
+    <string name="app_name">Secure Chat</string>
+    <string name="msgSystemInfo">System Info.</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="msgPleaseWait">Please wait.</string>
+    <string name="msgVerifyPinCode">Verify PIN code...</string>
+    <string name="labelPleaseEnterPinCode">Please enter PIN code</string>
+    <string name="msgPinCodeIsIncorrect">PIN code is incorrect, please enter correct PIN code.</string>
+    <string name="msgDoesntSupportOti">Unable to access SIM card, please make sure the SIM card is installed.</string>
+    <string name="msgCannotReadCardInfo">Unable to read SIM card information, please ensure you have inserted the correct card.</string>
+    <string name="msgValidatingYourAccount">Validating your account...</string>
+    <string name="menuAccountSignUp">Sign up your account</string>
+    <string name="labelEnterYourName">Please enter your name.</string>
+    <string name="msgUnableToGetIccid">Unable to get your card ID, please re-enter PIN code to continue.</string>
+    <string name="msgGeneratingRsaKey">Generating secret key.</string>
+    <string name="msgUnableToGenerateRsaKeyPair">Unable to generate secret key. </string>
+    <string name="msgFailToReadPublicKey">Unable to read secret key. </string>
+    <string name="msgFailToSignUpAccount">Failed to sign up your account. </string>
 </resources>

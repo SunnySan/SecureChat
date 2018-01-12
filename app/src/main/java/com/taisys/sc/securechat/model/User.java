@@ -8,15 +8,17 @@ public class User {
     private String userId;
     private String displayName;
     private String email;
+    private String publicKey;
     private String image;
 
     public User() {
     }
 
-    public User(String userId, String displayName, String email) {
+    public User(String userId, String displayName, String email, String publicKey) {
         this.userId = userId;
         this.displayName = displayName;
         this.email = email;
+        this.publicKey = publicKey;
     }
 
     public String getUserId() {
@@ -41,6 +43,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String email) {
+        this.publicKey = publicKey;
     }
 
     public String getImage() {

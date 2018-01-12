@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -21,9 +23,6 @@ import com.taisys.sc.securechat.util.UsersAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.taisys.sc.securechat.model.User;
-import com.taisys.sc.securechat.util.UsersAdapter;
 
 public class ChatUsersActivity extends AppCompatActivity {
 
@@ -56,22 +55,29 @@ public class ChatUsersActivity extends AppCompatActivity {
     private void populaterecyclerView(){
         adapter = new UsersAdapter(mUsersList, this);
         mRecyclerView.setAdapter(adapter);
-
     }
 
     private void queryUsersAndAddthemToList(){
         mUsersDBRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("SecureChat", "onDataChange");
+                mUsersList.clear();
                 if(dataSnapshot.getChildrenCount() > 0){
+                    Log.d("SecureChat", "getChildrenCount>0");
                     for(DataSnapshot snap: dataSnapshot.getChildren()){
                         User user = snap.getValue(User.class);
+                        Log.d("SecureChat", "user: " + user.getDisplayName());
                         //if not current user, as we do not want to show ourselves then chat with ourselves lol
                         try {
                             if(!user.getUserId().equals(mAuth.getCurrentUser().getUid())){
-                                mUsersList.add(user);
+                                if (!mUsersList.contains(user)){
+                                    Log.d("SecureChat", "Add user");
+                                    mUsersList.add(user);
+                                }
                             }
                         } catch (Exception e) {
+                            Toast.makeText(ChatUsersActivity.this, "Error reading contacts information: " + e.toString(), Toast.LENGTH_LONG).show();
                             e.printStackTrace();
                         }
                     }

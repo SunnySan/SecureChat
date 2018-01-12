@@ -2,30 +2,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:padding="10dp"
-    android:orientation="vertical"
-    android:layout_height="match_parent">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/userImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:scaleType="centerCrop"
             android:src="@mipmap/ic_launcher"/>
 
         <TextView
             android:id="@+id/userName"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textSize="21sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:padding="5dp"
             android:text="name"/>
 
-    </LinearLayout>
 
 </LinearLayout>
