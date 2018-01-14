@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -14,11 +15,13 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.taisys.sc.securechat.Application.App;
 import com.taisys.sc.securechat.model.ChatMessage;
 import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.MessagesAdapter;
@@ -39,6 +42,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
     private String mReceiverId;
     private String mReceiverName;
+    private String mReceiverImageUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,28 +92,30 @@ public class ChatMessagesActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        /**Query and populate chat messages**/
-        querymessagesBetweenThisUserAndClickedUser();
-
 
         /**sets title bar with recepient name**/
         queryRecipientName(mReceiverId);
+
+        /**Query and populate chat messages**/
+        querymessagesBetweenThisUserAndClickedUser();
+
     }
 
 
 
     private void sendMessageToFirebase(String message, String senderId, String receiverId){
-        mMessagesList.clear();
+        //mMessagesList.clear();
 
         ChatMessage newMsg = new ChatMessage(message, senderId, receiverId);
+        newMsg.setCreatedAt(System.currentTimeMillis());
         mMessagesDBRef.push().setValue(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if(!task.isSuccessful()){
                     //error
-                    Toast.makeText(ChatMessagesActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatMessagesActivity.this, "Error: " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }else{
-                    Toast.makeText(ChatMessagesActivity.this, "Message sent successfully!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(ChatMessagesActivity.this, "Message sent successfully!", Toast.LENGTH_SHORT).show();
                     mMessageEditText.setText(null);
                     hideSoftKeyboard();
                 }
@@ -128,21 +134,66 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
     private void querymessagesBetweenThisUserAndClickedUser(){
 
-        mMessagesDBRef.addValueEventListener(new ValueEventListener() {
+        //mMessagesDBRef.addValueEventListener(new ValueEventListener() {
+        mMessagesDBRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 mMessagesList.clear();
+                /* 用下方的 addChildEventListener 取代
+                                for(DataSnapshot snap: dataSnapshot.getChildren()){
+                                    ChatMessage chatMessage = snap.getValue(ChatMessage.class);
+                                    chatMessage.setDbKey(snap.getKey());
 
-                for(DataSnapshot snap: dataSnapshot.getChildren()){
-                    ChatMessage chatMessage = snap.getValue(ChatMessage.class);
-                    if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
-                        mMessagesList.add(chatMessage);
-                    }
+                                    if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
+                                        chatMessage.setSenderName(mReceiverName);
+                                        chatMessage.setSenderImage(mReceiverImageUrl);
+                                        Log.d("SecureChat", "mReceiverImageUrl=" + mReceiverImageUrl);
+                                        mMessagesList.add(chatMessage);
+                                    }
 
-                }
+                                }
+                                */
 
                 /**populate messages**/
                 populateMessagesRecyclerView();
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(ChatMessagesActivity.this, App.getContext().getResources().getString(R.string.msgFailedToRetrieveDataFromFirebase), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mMessagesDBRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot snap, String prevChildKey) {
+                ChatMessage chatMessage = snap.getValue(ChatMessage.class);
+                chatMessage.setDbKey(snap.getKey());
+                Log.d("SecureChat", "s=" + prevChildKey);
+
+                if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
+                    chatMessage.setSenderName(mReceiverName);
+                    chatMessage.setSenderImage(mReceiverImageUrl);
+                    Log.d("SecureChat", "child event mReceiverImageUrl=" + mReceiverImageUrl);
+                    mMessagesList.add(chatMessage);
+                    mChatsRecyclerView.scrollToPosition(mMessagesList.size()-1);
+                }
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
             }
 
@@ -166,6 +217,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 User recepient = dataSnapshot.getValue(User.class);
                 mReceiverName = recepient.getDisplayName();
+                mReceiverImageUrl = recepient.getImage();
 
                 try {
                     getSupportActionBar().setTitle(mReceiverName);
@@ -182,5 +234,6 @@ public class ChatMessagesActivity extends AppCompatActivity {
         });
 
     }
+
 
 }

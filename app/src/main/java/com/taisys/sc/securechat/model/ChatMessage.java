@@ -8,6 +8,11 @@ public class ChatMessage {
     private String message;
     private String senderId;
     private String receiverId;
+    private String senderImage;
+    private String senderName;
+    private long createdAt;
+    private String dbKey;
+    private boolean decrypted;
 
     public ChatMessage() {
     }
@@ -16,6 +21,7 @@ public class ChatMessage {
         this.message = message;
         this.senderId = senderId;
         this.receiverId = receiverId;
+        this.decrypted = false;
     }
 
     public String getMessage() {
@@ -41,5 +47,33 @@ public class ChatMessage {
     public void setReceiverId(String receiverId) {
         this.receiverId = receiverId;
     }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {this.senderName = senderName;}
+
+    public String getSenderImage() {
+        return senderImage;
+    }
+
+    public void setSenderImage(String senderImage) {this.senderImage = senderImage;}
+
+    public long getCreatedAt() {return createdAt;}
+
+    public void setCreatedAt(long createdAt) {this.createdAt = createdAt;}
+
+    public String getDbKey() {
+        return dbKey;
+    }
+
+    public void setDbKey(String dbKey) {this.dbKey = dbKey;}
+
+    public boolean getDecrypted() {
+        return decrypted;
+    }
+
+    public void setDecrypted(boolean decrypted) {this.decrypted = decrypted;}
 
 }

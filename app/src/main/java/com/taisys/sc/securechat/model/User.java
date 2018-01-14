@@ -49,7 +49,7 @@ public class User {
         return publicKey;
     }
 
-    public void setPublicKey(String email) {
+    public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
 

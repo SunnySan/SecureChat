@@ -67,13 +67,15 @@ public class ChatUsersActivity extends AppCompatActivity {
                     Log.d("SecureChat", "getChildrenCount>0");
                     for(DataSnapshot snap: dataSnapshot.getChildren()){
                         User user = snap.getValue(User.class);
-                        Log.d("SecureChat", "user: " + user.getDisplayName());
+                        Log.d("SecureChat", "user: " + user.getDisplayName() + ", public key=" + user.getPublicKey());
                         //if not current user, as we do not want to show ourselves then chat with ourselves lol
                         try {
                             if(!user.getUserId().equals(mAuth.getCurrentUser().getUid())){
                                 if (!mUsersList.contains(user)){
                                     Log.d("SecureChat", "Add user");
-                                    mUsersList.add(user);
+                                    if (user.getPublicKey()!=null && user.getPublicKey().length()>0){
+                                        mUsersList.add(user);
+                                    }
                                 }
                             }
                         } catch (Exception e) {
