@@ -27,4 +27,6 @@
     <string name="msgFailedToEncryptSecretKeyForSender">Failed to encrypt secret key for sender</string>
     <string name="msgUnableToFind3DESSecretKey">Unable to find your secret key for encrypting message, please re-login</string>
     <string name="msgFailedToEncryptMessage">Failed to encrypt your message</string>
+    <string name="msgUnableToRevert3DESSecretKey">Unable to retrieve the secret key that encrypted this message</string>
+    <string name="msgFailedToDecryptMessage">Failed to decrypt your message</string>
 </resources>

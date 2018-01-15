@@ -276,7 +276,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
     }
 
     private void populateMessagesRecyclerView(){
-        adapter = new MessagesAdapter(mMessagesList, this);
+        adapter = new MessagesAdapter(mMessagesList, this, mCard);
         mChatsRecyclerView.setAdapter(adapter);
 
     }
@@ -355,7 +355,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         String str3DESKey = Utility.byte2Hex(bytes3DESKey);
         String resString = "";
         String res[] = null;
-
+        Log.d("SecureChat", "str3DESKey= " + str3DESKey);
         //將 receiver 的 public key 寫入 0x0202，然後加密 3DES key
         resString = mCard.WriteFile(0x0202, 0, mReceiverPublicKey);
         if (resString != null && resString.equals(Card.RES_OK)) {
