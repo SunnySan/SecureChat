@@ -25,6 +25,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by sunny.sun on 2018/1/12.
@@ -165,4 +166,75 @@ public class Utility {
             return null;
         }
     }
+
+    private static final String Algorithm = "DESede"; //定義加密算法,可用 DES,DESede,Blowfish
+
+    //將字串加密
+    public static String encryptString(byte[] keybyte, String src){
+        //keybyte為加密密鑰，長度為24字節
+        //src為需被加密的原始明文字串
+        if (src==null || src.length()<1) return "";
+        byte[] byteEncrypted = encryptMode(keybyte, src.getBytes());	//加密
+        if (byteEncrypted==null) return "";	//當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
+        //String newString = bytesToStringUTFCustom(byteEncrypted);	//將 byte array 轉成一個個 char 的字串
+        String newString = byte2Hex(byteEncrypted);	//取得 byte array 每個 byte 的 16 進位碼
+        return newString;
+    }
+
+    //將字串解密
+    public static String decryptString(byte[] keybyte, String src){
+        //keybyte為加密密鑰，長度為24字節
+        //src為需被解密的已加密字串
+        if (src==null || src.length()<1) return "";
+        //byte[] byteStr = stringToBytesUTFCustom(src);	//將一個個 char 的字串轉成 byte array
+        byte[] byteStr = hex2Byte(src);	//將 16 進位碼的字串轉為 byte array
+        byte[] byteDecrypted = decryptMode(keybyte, byteStr);	//解密
+        if (byteDecrypted==null) return "";	//當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
+        String newString = new String(byteDecrypted);
+        return newString;
+    }
+
+    //keybyte為加密密鑰，長度為24字節
+//src為被加密的數據緩衝區（源）
+    public static byte[] encryptMode(byte[] keybyte,byte[] src){
+        try {	//生成密鑰
+            SecretKey deskey = new SecretKeySpec(keybyte, Algorithm);
+            //加密
+            Cipher c1 = Cipher.getInstance(Algorithm);
+            c1.init(Cipher.ENCRYPT_MODE, deskey);
+            return c1.doFinal(src);//在單一方面的加密或解密
+        } catch (java.security.NoSuchAlgorithmException e1) {
+            // TODO: handle exception
+            e1.printStackTrace();
+        }catch(javax.crypto.NoSuchPaddingException e2){
+            e2.printStackTrace();
+        }catch(java.lang.Exception e3){
+            e3.printStackTrace();
+        }
+        return null;
+    }
+
+    //keybyte為加密密鑰，長度為24字節
+//src為加密後的緩衝區
+    public static byte[] decryptMode(byte[] keybyte,byte[] src){
+        try {
+            //生成密鑰
+            SecretKey deskey = new SecretKeySpec(keybyte, Algorithm);
+            //解密
+            Cipher c1 = Cipher.getInstance(Algorithm);
+            c1.init(Cipher.DECRYPT_MODE, deskey);
+            return c1.doFinal(src);
+        } catch (java.security.NoSuchAlgorithmException e1) {
+            // TODO: handle exception
+            e1.printStackTrace();
+        }catch(javax.crypto.NoSuchPaddingException e2){
+            e2.printStackTrace();
+        }catch(java.lang.Exception e3){
+            e3.printStackTrace();
+        }
+        return null;
+    }
+
+
+
 }

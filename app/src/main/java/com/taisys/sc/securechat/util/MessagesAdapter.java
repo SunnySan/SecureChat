@@ -137,11 +137,13 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         ChatMessage msg = mMessagesList.get(position);
+        /*
         if (msg.getDecrypted()) {
             holder.messageTextView.setText(msg.getMessage());
         }else{
             holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptMessage));
         }
+        */
         if (holder.imageImageView!=null) {
             //Log.d("SecureChat", "msg.getSenderImage()= " + msg.getSenderImage());
             if (msg.getSenderImage() != null && msg.getSenderImage().length() > 0) {
@@ -154,7 +156,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         if (holder.nameTextView!=null) holder.nameTextView.setText(msg.getSenderName());
         if (holder.timeTextView!=null) holder.timeTextView.setText(changeTimeMillisToDateTime(msg.getCreatedAt()));
         holder.originalMessage = msg.getMessage();
-        holder.bDecrypted = msg.getDecrypted();
+        //holder.bDecrypted = msg.getDecrypted();
         holder.dbKey = msg.getDbKey();
 
     }

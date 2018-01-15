@@ -25,4 +25,6 @@
     <string name="msgFailedToWriteReceiverPublicKeyToSIM">Failed to prepare receiver secret key</string>
     <string name="msgFailedToEncryptSecretKeyForReceiver">Failed to encrypt secret key for receiver</string>
     <string name="msgFailedToEncryptSecretKeyForSender">Failed to encrypt secret key for sender</string>
+    <string name="msgUnableToFind3DESSecretKey">Unable to find your secret key for encrypting message, please re-login</string>
+    <string name="msgFailedToEncryptMessage">Failed to encrypt your message</string>
 </resources>

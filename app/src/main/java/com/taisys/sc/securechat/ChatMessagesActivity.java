@@ -49,6 +49,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private String mReceiverName;
     private String mReceiverImageUrl;
 
+    private byte[] m3DESSecretKey = null;
     private String mReceiverPublicKey = "";
     private String mSenderPublicKey = "";
 
@@ -85,6 +86,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         Log.d("SecureChat", "RECEIVER_PUBLIC_KEY= " + mReceiverPublicKey);
         Log.d("SecureChat", "SENDER_PUBLIC_KEY= " + mSenderPublicKey);
 
+        prepareSecretKey(); //動態產生加密資料用的 3DES key，並且用 sender 和 receiver 的 RSA public key 將 3DES key 加密
 
         /**listen to send message imagebutton click**/
         mSendImageButton.setOnClickListener(new View.OnClickListener() {
@@ -98,7 +100,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                     Toast.makeText(ChatMessagesActivity.this, "You must enter a message", Toast.LENGTH_SHORT).show();
                 }else {
                     //message is entered, send
-                    sendMessageToFirebase(message, senderId, mReceiverId);
+                    sendMessageToFirebase(message, senderId, mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
                 }
             }
         });
@@ -162,10 +164,20 @@ public class ChatMessagesActivity extends AppCompatActivity {
     }
 
 
-    private void sendMessageToFirebase(String message, String senderId, String receiverId){
+    private void sendMessageToFirebase(String message, String senderId, String receiverId, byte[] byte3DESKey, String encryptedSecretKeyForSender, String encryptedSecretKeyForReceiver){
         //mMessagesList.clear();
-
-        ChatMessage newMsg = new ChatMessage(message, senderId, receiverId);
+        if (byte3DESKey==null) {
+            Utility.showMessage(myContext, getString(R.string.msgUnableToFind3DESSecretKey));
+            return;
+        }
+        //把訊息內容用 3DES 加密起來
+        String encryptedMessage = Utility.encryptString(byte3DESKey, message);
+        if (encryptedMessage==null || encryptedMessage.length()<1){
+            Log.e("SecureChat", "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
+            Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptMessage));
+            return;
+        }
+        ChatMessage newMsg = new ChatMessage(encryptedMessage, senderId, receiverId, encryptedSecretKeyForSender, encryptedSecretKeyForReceiver);
         newMsg.setCreatedAt(System.currentTimeMillis());
         mMessagesDBRef.push().setValue(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -349,6 +361,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         if (resString != null && resString.equals(Card.RES_OK)) {
             Log.d("SecureChat", "Write mReceiverPublicKey to SIM success！");
         } else {
+            m3DESSecretKey = null;
             Log.d("SecureChat", "Write File failed！ error code=" + resString);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToWriteReceiverPublicKeyToSIM));
@@ -362,6 +375,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             Log.d("SecureChat", "SIM card encrypt receiver public key successfully");
             mReceiverPublicKey = res[1];    //將 receiver public key 換成加密過的 3DES key
         }else{
+            m3DESSecretKey = null;
             Log.d("SecureChat", "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForReceiver) + "error: " + res[0]);
@@ -374,12 +388,14 @@ public class ChatMessagesActivity extends AppCompatActivity {
             Log.d("SecureChat", "SIM card encrypt sender public key successfully");
             mSenderPublicKey = res[1];    //將 sendver public key 換成加密過的 3DES key
         }else{
+            m3DESSecretKey = null;
             Log.d("SecureChat", "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForSender) + "error: " + res[0]);
             return;
         }
         disWaiting();
+        m3DESSecretKey = bytes3DESKey;
     }   //private void generate3DESKeyAndEncryptedByRSAPublicKey(){
 
 }

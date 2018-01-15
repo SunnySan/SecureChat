@@ -5,23 +5,33 @@ package com.taisys.sc.securechat.model;
  */
 
 public class ChatMessage {
-    private String message;
-    private String senderId;
-    private String receiverId;
-    private String senderImage;
-    private String senderName;
-    private long createdAt;
-    private String dbKey;
-    private boolean decrypted;
+    private String message;     //訊息內容 (以 3DES key加密過)
+    private String senderId;    //Sender 在 firebase 的 ID
+    private String receiverId;  //Receiver 在 firebase 的 ID
+    private String senderImage; //Sender 頭像 image URL
+    private String senderName;  //Sender 人名稱呼
+    private long createdAt;     //訊息建立時間，由發送端產生，毫秒
+    private String dbKey;       //此訊息在 firebase database 的 unique key
+    private boolean decryptedBySender;      //Sender 是否已將訊息解密觀看 (即 "已讀" )
+    private boolean decryptedByReceiver;    //Receiver 是否已將訊息解密觀看 (即 "已讀" )
+    private String secretKeyForSender;      //被 Sender public key 加密過的 3DES key
+    private String secretKeyForReceiver;    //被 Receiver public key 加密過的 3DES key
 
     public ChatMessage() {
     }
 
-    public ChatMessage(String message, String senderId, String receiverId) {
+    public ChatMessage(String message, String senderId, String receiverId, String secretKeyForSender, String secretKeyForReceiver) {
         this.message = message;
         this.senderId = senderId;
         this.receiverId = receiverId;
-        this.decrypted = false;
+        this.senderImage = "";
+        this.senderName = "";
+        this.createdAt = 0;
+        this.dbKey = "";
+        this.decryptedBySender = false;
+        this.decryptedByReceiver = false;
+        this.secretKeyForSender = secretKeyForSender;
+        this.secretKeyForReceiver = secretKeyForReceiver;
     }
 
     public String getMessage() {
@@ -70,10 +80,28 @@ public class ChatMessage {
 
     public void setDbKey(String dbKey) {this.dbKey = dbKey;}
 
-    public boolean getDecrypted() {
-        return decrypted;
+    public boolean getDecryptedBySender() {
+        return decryptedBySender;
     }
 
-    public void setDecrypted(boolean decrypted) {this.decrypted = decrypted;}
+    public void setDecryptedBySender(boolean decryptedBySender) {this.decryptedBySender = decryptedBySender;}
+
+    public boolean getDecryptedByReceiver() {
+        return decryptedByReceiver;
+    }
+
+    public void setDecryptedByReceiver(boolean decryptedByReceiver) {this.decryptedByReceiver = decryptedByReceiver;}
+
+    public String getSecretKeyForSender() {
+        return secretKeyForSender;
+    }
+
+    public void setSecretKeyForSender(String secretKeyForSender) {this.secretKeyForSender = secretKeyForSender;}
+
+    public String getSecretKeyForReceiver() {
+        return secretKeyForReceiver;
+    }
+
+    public void setSecretKeyForReceiver(String secretKeyForReceiver) {this.secretKeyForReceiver = secretKeyForReceiver;}
 
 }
