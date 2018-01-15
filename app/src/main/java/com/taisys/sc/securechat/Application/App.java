@@ -19,9 +19,11 @@ public class App extends Application {
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         mContext = this;
+
     }
 
     public static Context getContext(){
         return mContext;
     }
+
 }

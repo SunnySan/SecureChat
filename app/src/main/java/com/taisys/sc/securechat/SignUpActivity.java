@@ -227,6 +227,17 @@ public class SignUpActivity extends AppCompatActivity {
             return;
         }
 
+        //順便先產生發送訊息時，要用 receiver public key 加密 3DES key 所需的 file，建立在 0x0202
+        begintime = System.currentTimeMillis();
+        resString = mCard
+                .CreateFile(0x0202, (byte)0x02, 0x0, (byte)0x0, (byte)0x0, (byte)0x0);
+        begintime = System.currentTimeMillis() - begintime;
+        if (resString != null && resString.equals(Card.RES_OK)) {
+            Log.d("SecureChat", "Create File success！ time=" + begintime + "ms");
+        } else {
+            Log.d("SecureChat", "Create File failed！ error code=" + resString);
+        }
+
         /*
             res = mCard.ReadFile(0x0201, 4, 128);
             if (res != null && res[0].equals(Card.RES_OK)) {

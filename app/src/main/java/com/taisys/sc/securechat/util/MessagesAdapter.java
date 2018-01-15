@@ -1,8 +1,6 @@
 package com.taisys.sc.securechat.util;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,7 +15,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 import com.taisys.sc.securechat.Application.App;
-import com.taisys.sc.securechat.ChatMessagesActivity;
 import com.taisys.sc.securechat.R;
 import com.taisys.sc.securechat.model.ChatMessage;
 
@@ -91,28 +88,6 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         }
     }
 
-    public class ViewHolder2 extends RecyclerView.ViewHolder {
-        //這是 Received 訊息的 ViewHolder
-        // each data item is just a string in this case
-        public TextView messageTextView;
-        public ImageView imageImageView;
-        public TextView nameTextView;
-        public TextView timeTextView;
-        public String originalMessage;  //儲存原始訊息內容
-        public boolean bDecrypted;  //判斷此訊息是否已被解密
-
-        public View layout;
-
-        public ViewHolder2(View v) {
-            super(v);
-            layout = v;
-            messageTextView = (TextView) v.findViewById(R.id.chatMsgTextView);
-            imageImageView = (ImageView) v.findViewById(R.id.chatImage);
-            nameTextView = (TextView) v.findViewById(R.id.chatNameTextView);
-            timeTextView = (TextView) v.findViewById(R.id.chatTimeTextView);
-
-        }
-    }
 
 
     public void add(int position, ChatMessage message) {

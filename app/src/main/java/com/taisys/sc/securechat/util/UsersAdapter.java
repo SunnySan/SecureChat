@@ -23,6 +23,7 @@ import java.util.List;
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> {
     private List<User> mUsersList;
     private Context mContext;
+    private String myPublicKey = "";    //目前這個 SIM 卡的 public key
 
 
 
@@ -62,10 +63,10 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
 
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public UsersAdapter(List<User> myDataset, Context context) {
+    public UsersAdapter(List<User> myDataset, Context context, String sPublicKey) {
         mUsersList = myDataset;
         mContext = context;
-
+        myPublicKey = sPublicKey;
     }
 
     // Create new views (invoked by the layout manager)
@@ -102,17 +103,19 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
             @Override
             public void onClick(View v) {
                 //send this user id to chat messages activity
-                goToUpdateActivity(user.getUserId());
+                goToChatMessageActivity(user.getUserId(), user.getPublicKey());
             }
         });
 
 
     }
 
-    private void goToUpdateActivity(String personId){
-        Intent goToUpdate = new Intent(mContext, ChatMessagesActivity.class);
-        goToUpdate.putExtra("USER_ID", personId);
-        mContext.startActivity(goToUpdate);
+    private void goToChatMessageActivity(String personId, String publicKey){
+        Intent goToChatMessage = new Intent(mContext, ChatMessagesActivity.class);
+        goToChatMessage.putExtra("USER_ID", personId);
+        goToChatMessage.putExtra("RECEIVER_PUBLIC_KEY", publicKey);
+        goToChatMessage.putExtra("SENDER_PUBLIC_KEY", myPublicKey);
+        mContext.startActivity(goToChatMessage);
     }
 
 

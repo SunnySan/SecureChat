@@ -22,7 +22,9 @@ import java.security.spec.RSAPublicKeySpec;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 /**
  * Created by sunny.sun on 2018/1/12.
@@ -151,4 +153,16 @@ public class Utility {
         return null;
     }
 
+    //隨機產生 3DES Key
+    public static byte[] generate3DESKey(){
+        try {
+            KeyGenerator keyGen = KeyGenerator.getInstance("DESede");
+            SecretKey key = keyGen.generateKey();
+            byte[] b = key.getEncoded();
+            //Log.d("SecureChat", "generate 3DES key= " + byte2Hex(b));
+            return key.getEncoded();
+        }catch (NoSuchAlgorithmException e){
+            return null;
+        }
+    }
 }

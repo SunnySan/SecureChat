@@ -20,4 +20,9 @@
     <string name="msgFailedToRetrieveDataFromFirebase">Failed to retrieve message list</string>
     <string name="msgClickMeToDecryptMessage">Click me to decrypt message</string>
     <string name="msgDecryptingMessage">Decrypting message, please wait...</string>
+    <string name="msgGenerating3DESKey">Preparing secret key.</string>
+    <string name="msgFailedToGenerate3DESKey">Failed to generate secret key.</string>
+    <string name="msgFailedToWriteReceiverPublicKeyToSIM">Failed to prepare receiver secret key</string>
+    <string name="msgFailedToEncryptSecretKeyForReceiver">Failed to encrypt secret key for receiver</string>
+    <string name="msgFailedToEncryptSecretKeyForSender">Failed to encrypt secret key for sender</string>
 </resources>

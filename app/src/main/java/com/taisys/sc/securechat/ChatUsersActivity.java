@@ -32,6 +32,7 @@ public class ChatUsersActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private UsersAdapter adapter;
     private List<User> mUsersList = new ArrayList<>();
+    private String myPublicKey = "";    //目前這個 SIM 卡的 public key
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +54,7 @@ public class ChatUsersActivity extends AppCompatActivity {
     }
 
     private void populaterecyclerView(){
-        adapter = new UsersAdapter(mUsersList, this);
+        adapter = new UsersAdapter(mUsersList, this, myPublicKey);
         mRecyclerView.setAdapter(adapter);
     }
 
@@ -64,18 +65,22 @@ public class ChatUsersActivity extends AppCompatActivity {
                 Log.d("SecureChat", "onDataChange");
                 mUsersList.clear();
                 if(dataSnapshot.getChildrenCount() > 0){
-                    Log.d("SecureChat", "getChildrenCount>0");
+                    //Log.d("SecureChat", "getChildrenCount>0");
                     for(DataSnapshot snap: dataSnapshot.getChildren()){
                         User user = snap.getValue(User.class);
-                        Log.d("SecureChat", "user: " + user.getDisplayName() + ", public key=" + user.getPublicKey());
+                        //Log.d("SecureChat", "user: " + user.getDisplayName() + ", public key=" + user.getPublicKey());
                         //if not current user, as we do not want to show ourselves then chat with ourselves lol
                         try {
                             if(!user.getUserId().equals(mAuth.getCurrentUser().getUid())){
                                 if (!mUsersList.contains(user)){
-                                    Log.d("SecureChat", "Add user");
+                                    //Log.d("SecureChat", "Add user");
                                     if (user.getPublicKey()!=null && user.getPublicKey().length()>0){
                                         mUsersList.add(user);
                                     }
+                                }
+                            }else{  //這是目前 SIM 卡用戶，將自己的 public key 記起來，發訊息時要用來加密資料
+                                if (user.getPublicKey()!=null && user.getPublicKey().length()>0){
+                                    myPublicKey = user.getPublicKey();  //等一下要 pass 給 UsersAdapter.java
                                 }
                             }
                         } catch (Exception e) {
