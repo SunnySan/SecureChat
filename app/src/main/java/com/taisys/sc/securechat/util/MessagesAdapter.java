@@ -173,6 +173,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             if (msg.getSenderImage() != null && msg.getSenderImage().length() > 0) {
                 Picasso.with(mContext)
                         .load(msg.getSenderImage())
+                        .placeholder(R.mipmap.ic_launcher)
                         .into(holder.imageImageView);
                 //holder.imageImageView.setImageURI(Uri.parse(msg.getSenderImage()));
             }

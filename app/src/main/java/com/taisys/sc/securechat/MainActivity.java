@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
             //utility.showMessage(myContext, s);
             j = Integer.parseInt(s);
             iccid = res[1].substring((i+1)*2+2, (i+1)*2+2 + j*2);
+            //iccid="ted";
             //utility.showMessage(myContext, s);
             //i = s.length();
             //utility.showMessage(myContext, String.valueOf(i));

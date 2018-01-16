@@ -59,7 +59,8 @@ public class ChatUsersActivity extends AppCompatActivity {
     }
 
     private void queryUsersAndAddthemToList(){
-        mUsersDBRef.addValueEventListener(new ValueEventListener() {
+        //以 displayName 排序顯示
+        mUsersDBRef.orderByChild("displayName").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Log.d("SecureChat", "onDataChange");
