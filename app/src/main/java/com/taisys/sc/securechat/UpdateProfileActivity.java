@@ -1,12 +1,13 @@
 package com.taisys.sc.securechat;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -31,12 +32,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 import com.taisys.sc.securechat.model.User;
+import com.taisys.sc.securechat.util.Utility;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +55,9 @@ public class UpdateProfileActivity extends AppCompatActivity {
     private DatabaseReference mUserDBRef;
     private StorageReference mStorageRef;
     private String mCurrentUserID;
+
+    private ProgressDialog pg = null;
+    private Context myContext = null;
 
 
     @Override
@@ -77,20 +80,22 @@ public class UpdateProfileActivity extends AppCompatActivity {
         /**populate views initially**/
         populateTheViews();
 
+        myContext = this;
+
         /**listen to imageview click**/
         mUserPhotoImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(UpdateProfileActivity.this);
-                builder.setTitle("Change photo");
-                builder.setMessage("Choose a method to change photo");
-                builder.setPositiveButton("Upload", new DialogInterface.OnClickListener() {
+                builder.setTitle(getString(R.string.labelChangePhoto));
+                builder.setMessage(getString(R.string.labelChooseAMethodToChangePhoto));
+                builder.setPositiveButton(getString(R.string.labelUpload), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         pickPhotoFromGallery();
                     }
                 });
-                builder.setNegativeButton("Camera", new DialogInterface.OnClickListener() {
+                builder.setNegativeButton(getString(R.string.labelCamera), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dispatchTakePictureIntent();
@@ -106,14 +111,27 @@ public class UpdateProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String userDisplayName = mUserNameEdit.getText().toString().trim();
+                if (userDisplayName==null || userDisplayName.length()<1){
+                    Utility.showMessage(myContext, getString(R.string.labelEnterYourName));
+                    return;
+                }
 
                 /**Call the Firebase methods**/
                 try {
+                    showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgUpdateYourProfile));
                     updateUserName(userDisplayName);
-                    updateUserPhoto(byteArray);
+                    if (byteArray!=null) {
+                        updateUserPhoto(byteArray);
+                    }else{
+                        disWaiting();
+                        Utility.showToast(myContext, getString(R.string.msgSuccess));
+                    }
                 } catch (Exception e) {
+                    disWaiting();
                     e.printStackTrace();
+                    Utility.showMessage(myContext, getString(R.string.msgFailedToUpdateYourProfile));
                 }
+
 
             }
         });
@@ -126,6 +144,33 @@ public class UpdateProfileActivity extends AppCompatActivity {
         populateTheViews();
     }
 
+    private void showWaiting(final String title, final String msg) {
+        disWaiting();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                pg = new ProgressDialog(myContext);
+                // }
+                pg.setIndeterminate(true);
+                pg.setCancelable(false);
+                pg.setCanceledOnTouchOutside(false);
+                pg.setTitle(title);
+                pg.setMessage(msg);
+                pg.show();
+            }
+        });
+    }
+
+    private void disWaiting() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (pg != null && pg.isShowing()) {
+                    pg.dismiss();
+                }
+            }
+        });
+    }
 
     private void populateTheViews(){
         mUserDBRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addValueEventListener(new ValueEventListener() {
@@ -179,9 +224,9 @@ public class UpdateProfileActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("SecureChat", "requestCode= " + String.valueOf(requestCode));
-        Log.d("SecureChat", "resultCode= " + String.valueOf(resultCode));
-        Log.d("SecureChat", "data= " + data.toString());
+        //Log.d("SecureChat", "requestCode= " + String.valueOf(requestCode));
+        //Log.d("SecureChat", "resultCode= " + String.valueOf(resultCode));
+        //Log.d("SecureChat", "data= " + data.toString());
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Log.d("SecureChat", "camera image ok");
             Bundle extras = data.getExtras();
@@ -191,32 +236,6 @@ public class UpdateProfileActivity extends AppCompatActivity {
             Bitmap resized = Bitmap.createScaledBitmap(imageBitmap, 100, 100, true);
             mUserPhotoImageView.setImageBitmap(resized);
             mUserPhotoImageView.invalidate();
-            //setMyImage();
-
-            //Picasso.with(UpdateProfileActivity.this).load(outputFileUri).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
-            /*
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mUserPhotoImageView.setVisibility(View.GONE);
-                    mUserPhotoImageView.setImageBitmap(imageBitmap);
-                    mUserPhotoImageView.setVisibility(View.VISIBLE);
-                }
-            });
-            */
-
-
-            /*
-            mUserPhotoImageView.setVisibility(View.VISIBLE);
-            mUserPhotoImageView.post(new Runnable() {
-                @Override
-                public void run() {
-                    mUserPhotoImageView.setVisibility(View.GONE);
-                    mUserPhotoImageView.setVisibility(View.VISIBLE);
-                }
-            });
-            */
-
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -224,18 +243,18 @@ public class UpdateProfileActivity extends AppCompatActivity {
             byteArray = stream.toByteArray();
 
         }else if(requestCode == REQUEST_IMAGE_PICK && resultCode == RESULT_OK){
-            imageBitmap = data.getExtras().getParcelable("data");
-            /*
-                        Log.d("SecureChat", "pick image ok, data= " + data.toString());
-                        Bundle extras = data.getExtras();
-                        Log.d("SecureChat", "pick image ok, extras= " + extras.toString());
-
-                        Bitmap imageBitmap = (Bitmap) extras.get("data");
-                        */
-            Log.d("SecureChat", "pick image ok, imageBitmap= " + imageBitmap.toString());
+            try{
+                InputStream inputStream = this.getContentResolver().openInputStream(data.getData());
+                imageBitmap = BitmapFactory.decodeStream(inputStream);
+            }catch (FileNotFoundException e){
+                Log.d("SecureChat", "Failed to get image stream");
+                Utility.showMessage(myContext, getString(R.string.msgFailedToGetYourImage));
+            }
+            //Log.d("SecureChat", "pick image ok, imageBitmap= " + imageBitmap.toString());
+            //Uri selectedImage = data.getData();
+            //mUserPhotoImageView.setImageURI(selectedImage);
             mUserPhotoImageView.setImageBitmap(imageBitmap);
             Log.d("SecureChat", "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()));
-
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -262,6 +281,8 @@ public class UpdateProfileActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                 if(!task.isSuccessful()){
                     //error saving photo
+                    disWaiting();
+                    Utility.showMessage(myContext, getString(R.string.msgFailedToUpdateYourProfile));
                 }else{
                     //success saving photo
                     String userPhotoLink = task.getResult().getDownloadUrl().toString();
@@ -269,7 +290,10 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     Map<String, Object> childUpdates = new HashMap<>();
                     childUpdates.put("image", userPhotoLink);
                     mUserDBRef.child(mCurrentUserID).updateChildren(childUpdates);
+                    Utility.showToast(myContext, getString(R.string.msgSuccess));
+                    disWaiting();
                 }
+
             }
         });
     }

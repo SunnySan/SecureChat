@@ -3,7 +3,7 @@
     <string name="msgSystemInfo">System Info.</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="msgPleaseWait">Please wait.</string>
+    <string name="msgPleaseWait">Please wait...</string>
     <string name="msgVerifyPinCode">Verify PIN code...</string>
     <string name="labelPleaseEnterPinCode">Please enter PIN code</string>
     <string name="msgPinCodeIsIncorrect">PIN code is incorrect, please enter correct PIN code.</string>
@@ -29,4 +29,14 @@
     <string name="msgFailedToEncryptMessage">Failed to encrypt your message</string>
     <string name="msgUnableToRevert3DESSecretKey">Unable to retrieve the secret key that encrypted this message</string>
     <string name="msgFailedToDecryptMessage">Failed to decrypt your message</string>
+    <string name="msgFailedToGetYourImage">Failed to get your image</string>
+    <string name="msgUpdateYourProfile">Updating your profile</string>
+    <string name="msgFailedToUpdateYourProfile">Failed to updating your profile</string>
+    <string name="msgSuccess">Success</string>
+    <string name="labelEnterUserName">Enter your name...</string>
+    <string name="labelUpdate">Update</string>
+    <string name="labelChangePhoto">Change photo</string>
+    <string name="labelChooseAMethodToChangePhoto">Choose a method to change photo</string>
+    <string name="labelUpload">Upload</string>
+    <string name="labelCamera">Camera</string>
 </resources>

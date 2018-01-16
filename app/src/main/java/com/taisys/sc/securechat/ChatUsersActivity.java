@@ -134,6 +134,7 @@ public class ChatUsersActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.chat_user_menu, menu);
+        //invalidateOptionsMenu();
         return true;
     }
 

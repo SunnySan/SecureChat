@@ -19,12 +19,12 @@
         android:id="@+id/userNameUpdate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter user name..."/>
+        android:hint="@string/labelEnterUserName"/>
 
     <Button
         android:id="@+id/updateUserProfileBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Update"/>
+        android:text="@string/labelUpdate"/>
 
 </LinearLayout>

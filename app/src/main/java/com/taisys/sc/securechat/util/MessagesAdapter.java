@@ -2,7 +2,6 @@ package com.taisys.sc.securechat.util;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -58,6 +57,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         public  String dbKey;   //firebase 中此筆資料的 key
         public String encryptedSecretKeyForSender;  //使用此訊息 sender public key 加密過的 3DES key
         public String encryptedSecretKeyForReceiver;  //使用此訊息 receiver public key 加密過的 3DES key
+        public int positionOfMessageList;   //此筆訊息在mMessagesList中的index，當訊息解密後須修改mMessagesList中此訊息內容，不然手機畫面refresh後顯示的會是未解密訊息
 
         public View layout;
 
@@ -92,6 +92,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                 messageTextView.setText(decryptedMessage);
                 updateDecryptStatusFromDb(nameTextView, dbKey);
                 bDecrypted = true;
+                mMessagesList.get(positionOfMessageList).setMessage(decryptedMessage);  //如果不這樣做的話，用戶滑動畫面後此訊息會顯示成未解密內容
             }
             //暫時先簡單這樣做吧
             /*
@@ -184,6 +185,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         holder.dbKey = msg.getDbKey();
         holder.encryptedSecretKeyForSender = msg.getSecretKeyForSender();
         holder.encryptedSecretKeyForReceiver = msg.getSecretKeyForReceiver();
+        holder.positionOfMessageList = position;
     }
 
     // Return the size of your dataset (invoked by the layout manager)
@@ -235,12 +237,14 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         res = mCard.RSAPriKeyCalc(encryptedSecretKey, true, 0x0301);
         begintime = System.currentTimeMillis() - begintime;
         if (res != null && res[0].equals(Card.RES_OK)) {
-            Log.d("SecureChat", "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
+            //Log.d("SecureChat", "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
             original3DESKey = hex2Byte(res[1]); //取得加密此訊息的 3DES key
-            i = Utility.getPlainTextLength(original3DESKey);    //實際 3DES key 的長度(應為24)
+            //Log.d("SecureChat", "original3DESKey byte[]= " + original3DESKey.toString());
+            //i = Utility.getPlainTextLength(original3DESKey);    //實際 3DES key 的長度(應為24)
             s = Utility.byte2Hex(original3DESKey);
-            s = s.substring(0, i*2);
-            Log.d("SecureChat", "original3DESKey= " + s);
+            //Log.d("SecureChat", "original3DESKey full s= " + s);
+            s = s.substring(s.length()-48); //只取後48個數字，即24 bytes
+            //Log.d("SecureChat", "original3DESKey truncated s= " + s);
             original3DESKey = Utility.hex2Byte(s);
             s = Utility.decryptString(original3DESKey, encryptedMessage);
             if (s!=null && s.length()>0) {

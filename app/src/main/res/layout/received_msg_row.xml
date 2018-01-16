@@ -14,9 +14,10 @@
 
         <ImageView
             android:id="@+id/chatImage"
+            android:src="@mipmap/ic_launcher"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginLeft="4dp"
+            android:layout_marginLeft="0dp"
             />
             <!--android:background="@drawable/circle"-->
 

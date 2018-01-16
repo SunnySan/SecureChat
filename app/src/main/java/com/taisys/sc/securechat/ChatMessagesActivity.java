@@ -172,6 +172,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
         //把訊息內容用 3DES 加密起來
         String encryptedMessage = Utility.encryptString(byte3DESKey, message);
+        Log.d("SecureChat", "encrypt message with 3DES key: " + Utility.byte2Hex(byte3DESKey));
         if (encryptedMessage==null || encryptedMessage.length()<1){
             Log.e("SecureChat", "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptMessage));
@@ -353,9 +354,10 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
 
         String str3DESKey = Utility.byte2Hex(bytes3DESKey);
+        //Log.d("SecureChat", "str3DESKey= " + str3DESKey);
         String resString = "";
         String res[] = null;
-        Log.d("SecureChat", "str3DESKey= " + str3DESKey);
+        //Log.d("SecureChat", "str3DESKey= " + str3DESKey);
         //將 receiver 的 public key 寫入 0x0202，然後加密 3DES key
         resString = mCard.WriteFile(0x0202, 0, mReceiverPublicKey);
         if (resString != null && resString.equals(Card.RES_OK)) {
@@ -369,7 +371,8 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
 
         //用 receiver 的 public key 加密 3DES key
-        str3DESKey = Utility.paddingString(str3DESKey, 256);    //進行 padding
+        str3DESKey = Utility.paddingString(str3DESKey, 128);    //進行 padding
+        //Log.d("SecureChat", "str3DESKey padding= " + str3DESKey);
         res = mCard.RSAPubKeyCalc(str3DESKey, 0x0202);
         if (res != null && res[0].equals(Card.RES_OK)) {
             Log.d("SecureChat", "SIM card encrypt receiver public key successfully");

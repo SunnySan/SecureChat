@@ -111,13 +111,14 @@ public class Utility {
 
         int l = 0;
         i = length - i;
+        String s = "";
         for (l=0;l<i;l++){
-            src += "FF";
+            s += "00";
         }
-        return src;
+        return s + src; //把原始字串前面補0
     }
 
-    //'將byte array中ascii = 0xFF的剔除，取得未被padding的原始字串長度
+    //'將byte array中ascii = 0xFF的剔除，取得未被padding的原始字串長度(沒在用)
     public static int getPlainTextLength(byte[] bytes){
         if (bytes == null || bytes.length == 0) return 0;
         int i = 0;
