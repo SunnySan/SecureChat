@@ -57,6 +57,8 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private ProgressDialog pg = null;
     private Context myContext = null;
 
+    private boolean burnAfterReading = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +80,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
         mUsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
 
         myContext = this;
+
+        String s = Utility.getMySetting(myContext, "burnAfterReading");
+        if (s!=null && s.equals("Y")) burnAfterReading = true;
 
         //get receiverId from intent
         mReceiverId = getIntent().getStringExtra("USER_ID");
@@ -113,17 +118,20 @@ public class ChatMessagesActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
+        //Log.d("SecureChat", "onStart()");
         /**sets title bar with recepient name**/
         queryRecipientName(mReceiverId);
 
         /**Query and populate chat messages**/
-        querymessagesBetweenThisUserAndClickedUser();
+        //下面這一行改為準備好3DES key以後再做，否則若用戶設定autoDecryptMessage的話會出錯，因為mCard還沒ready
+        //querymessagesBetweenThisUserAndClickedUser();
 
     }
 
     @Override
     public void onDestroy() {
+        //Log.d("SecureChat", "Leave chat room...message count=" + mMessagesList.size());
+        doBurnAfterReading();
         if (mCard!=null){
             mCard.CloseSEService();
         }
@@ -242,7 +250,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot snap, String prevChildKey) {
                 ChatMessage chatMessage = snap.getValue(ChatMessage.class);
                 chatMessage.setDbKey(snap.getKey());
-                Log.d("SecureChat", "s=" + prevChildKey);
+                Log.d("SecureChat", "message arrive db Key=" + snap.getKey());
 
                 if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
                     chatMessage.setSenderName(mReceiverName);
@@ -399,6 +407,27 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
         disWaiting();
         m3DESSecretKey = bytes3DESKey;
+        /**Query and populate chat messages**/
+        querymessagesBetweenThisUserAndClickedUser();
     }   //private void generate3DESKeyAndEncryptedByRSAPublicKey(){
 
+    //如果用戶有設定 burnAfterReading = true 的話，將已讀的訊息刪除
+    private void doBurnAfterReading(){
+        if (!burnAfterReading) return;
+        if (mMessagesList.isEmpty() || mMessagesList.size()<1) return;
+        Log.d("SecureChat", "Do burn after reading");
+        showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgProcessBurnAfterReading));
+        int i = 0;
+        ChatMessage msg = null;
+        String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        for (i=0;i<mMessagesList.size();i++){
+            msg = mMessagesList.get(i);
+            Log.d("SecureChat", "msg receiver id= " + msg.getReceiverId() + ", decrypted by sender= " + msg.getDecryptedBySender());
+            Log.d("SecureChat", "msg receiver id= " + msg.getReceiverId() + ", decrypted by receiver= " + msg.getDecryptedByReceiver());
+            if (msg.getReceiverId().equals(myUid) && msg.getDecryptedByReceiver()==true){
+                mMessagesDBRef.child(msg.getDbKey()).removeValue();
+            }
+        }
+        disWaiting();
+    }
 }

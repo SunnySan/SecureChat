@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="10dp"
     tools:context="com.taisys.sc.securechat.UpdateProfileActivity">
@@ -15,16 +15,61 @@
         android:src="@mipmap/ic_launcher"
         android:scaleType="centerCrop"/>
 
-    <EditText
-        android:id="@+id/userNameUpdate"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/labelEnterUserName"/>
+        android:orientation="horizontal" >
 
-    <Button
-        android:id="@+id/updateUserProfileBtn"
+        <TextView
+            android:text="@string/labelYourName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:id="@+id/labelUpdateProfileYourName" />
+
+        <EditText
+            android:id="@+id/userNameUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:hint="@string/labelEnterUserName"/>
+    </LinearLayout>
+
+    <Switch
+        android:id="@+id/autoDecryptMessageUpdate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/labelUpdate"/>
+        android:text="@string/labelAutoDecryptMessage"
+        android:layout_marginTop="10dp"
+        android:checked="false"/>
+
+    <Switch
+        android:id="@+id/burnAfterReadingUpdate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/labelBurnAfterReading"
+        android:layout_marginTop="10dp"
+        android:checked="false"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp">
+
+        <Button
+            android:id="@+id/updateUserProfileBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/labelUpdate"
+            android:layout_weight="0.37"/>
+
+        <Button
+            android:id="@+id/cancelUpdateUserProfileBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@android:string/cancel"
+            android:layout_weight="0.37" />
+    </LinearLayout>
 
 </LinearLayout>

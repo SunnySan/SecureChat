@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -47,7 +48,10 @@ public class UpdateProfileActivity extends AppCompatActivity {
 
     private ImageView mUserPhotoImageView;
     private EditText mUserNameEdit;
+    private Switch mAutoDecryptMessage;
+    private Switch mBurnAfterReading;
     private Button mUpdateProfileBtn;
+    private Button mCancelBtn;
 
     private Uri outputFileUri;
     private Bitmap imageBitmap = null;
@@ -69,7 +73,10 @@ public class UpdateProfileActivity extends AppCompatActivity {
         //init
         mUserPhotoImageView = (ImageView)findViewById(R.id.userPhotoUpdate);
         mUserNameEdit = (EditText)findViewById(R.id.userNameUpdate);
+        mAutoDecryptMessage = (Switch)findViewById(R.id.autoDecryptMessageUpdate);
+        mBurnAfterReading = (Switch)findViewById(R.id.burnAfterReadingUpdate);
         mUpdateProfileBtn = (Button)findViewById(R.id.updateUserProfileBtn);
+        mCancelBtn = (Button)findViewById(R.id.cancelUpdateUserProfileBtn);
 
         mCurrentUserID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -81,6 +88,8 @@ public class UpdateProfileActivity extends AppCompatActivity {
         populateTheViews();
 
         myContext = this;
+
+        initSwitchValue();
 
         /**listen to imageview click**/
         mUserPhotoImageView.setOnClickListener(new View.OnClickListener() {
@@ -119,12 +128,26 @@ public class UpdateProfileActivity extends AppCompatActivity {
                 /**Call the Firebase methods**/
                 try {
                     showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgUpdateYourProfile));
+
+                    if (mAutoDecryptMessage.isChecked()) {
+                        Utility.setMySetting(myContext, "autoDecryptMessagge", "Y");
+                    }else{
+                        Utility.setMySetting(myContext, "autoDecryptMessagge", "N");
+                    }
+
+                    if (mBurnAfterReading.isChecked()) {
+                        Utility.setMySetting(myContext, "burnAfterReading", "Y");
+                    }else{
+                        Utility.setMySetting(myContext, "burnAfterReading", "N");
+                    }
+
                     updateUserName(userDisplayName);
                     if (byteArray!=null) {
                         updateUserPhoto(byteArray);
                     }else{
                         disWaiting();
                         Utility.showToast(myContext, getString(R.string.msgSuccess));
+                        closeActivity();
                     }
                 } catch (Exception e) {
                     disWaiting();
@@ -135,6 +158,13 @@ public class UpdateProfileActivity extends AppCompatActivity {
 
             }
         });
+
+        mCancelBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     @Override
@@ -142,6 +172,10 @@ public class UpdateProfileActivity extends AppCompatActivity {
         super.onStart();
         /**populate views initially**/
         populateTheViews();
+    }
+
+    private void closeActivity(){
+        finish();
     }
 
     private void showWaiting(final String title, final String msg) {
@@ -195,6 +229,22 @@ public class UpdateProfileActivity extends AppCompatActivity {
         });
     }
 
+    //設定兩個 Switch 的值
+    private void initSwitchValue(){
+        String sAuto = Utility.getMySetting(myContext, "autoDecryptMessagge");
+        String sBurn = Utility.getMySetting(myContext, "burnAfterReading");
+        if (sAuto!=null && sAuto.equals("Y")) {
+            mAutoDecryptMessage.setChecked(true);
+        }else{
+            mAutoDecryptMessage.setChecked(false);
+        }
+
+        if (sBurn!=null && sBurn.equals("Y")) {
+            mBurnAfterReading.setChecked(true);
+        }else{
+            mBurnAfterReading.setChecked(false);
+        }
+    }
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -292,6 +342,7 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     mUserDBRef.child(mCurrentUserID).updateChildren(childUpdates);
                     Utility.showToast(myContext, getString(R.string.msgSuccess));
                     disWaiting();
+                    closeActivity();
                 }
 
             }

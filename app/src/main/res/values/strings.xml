@@ -33,10 +33,14 @@
     <string name="msgUpdateYourProfile">Updating your profile</string>
     <string name="msgFailedToUpdateYourProfile">Failed to updating your profile</string>
     <string name="msgSuccess">Success</string>
+    <string name="labelYourName">Name</string>
     <string name="labelEnterUserName">Enter your name...</string>
+    <string name="labelAutoDecryptMessage">Auto decrypt message</string>
+    <string name="labelBurnAfterReading">Burn after reading</string>
     <string name="labelUpdate">Update</string>
     <string name="labelChangePhoto">Change photo</string>
     <string name="labelChooseAMethodToChangePhoto">Choose a method to change photo</string>
     <string name="labelUpload">Upload</string>
     <string name="labelCamera">Camera</string>
+    <string name="msgProcessBurnAfterReading">Process burn after reading</string>
 </resources>
