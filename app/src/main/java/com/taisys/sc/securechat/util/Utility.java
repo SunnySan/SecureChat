@@ -191,14 +191,18 @@ public class Utility {
         //keybyte為加密密鑰，長度為24字節
         //src為需被加密的原始明文字串
         if (src==null || src.length()<1) return "";
-        //src = paddingStringWithFF(byte2Hex(stringToBytesUTFCustom(src)), 8);
-        src = paddingStringWithFF(byte2Hex(src.getBytes()), 8);
-        //Log.d("SecureChat", "3DES encrypt padding string: " + src);
-        byte[] byteEncrypted = encryptMode(keybyte, src.getBytes());	//加密
-        if (byteEncrypted==null) return "";	//當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
-        //String newString = bytesToStringUTFCustom(byteEncrypted);	//將 byte array 轉成一個個 char 的字串
-        String newString = byte2Hex(byteEncrypted);	//取得 byte array 每個 byte 的 16 進位碼
-        return newString;
+        try {
+            //src = paddingStringWithFF(byte2Hex(stringToBytesUTFCustom(src)), 8);
+            src = paddingStringWithFF(byte2Hex(src.getBytes()), 8);
+            //Log.d("SecureChat", "3DES encrypt padding string: " + src);
+            byte[] byteEncrypted = encryptMode(keybyte, src.getBytes());    //加密
+            if (byteEncrypted == null) return "";    //當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
+            //String newString = bytesToStringUTFCustom(byteEncrypted);	//將 byte array 轉成一個個 char 的字串
+            String newString = byte2Hex(byteEncrypted);    //取得 byte array 每個 byte 的 16 進位碼
+            return newString;
+        }catch (Exception e){
+            return "";
+        }
     }
 
     //將字串解密
@@ -206,18 +210,22 @@ public class Utility {
         //keybyte為加密密鑰，長度為24字節
         //src為需被解密的已加密字串
         if (src==null || src.length()<1) return "";
-        //byte[] byteStr = stringToBytesUTFCustom(src);	//將一個個 char 的字串轉成 byte array
-        byte[] byteStr = hex2Byte(src);	//將 16 進位碼的字串轉為 byte array
-        byte[] byteDecrypted = decryptMode(keybyte, byteStr);	//解密
-        if (byteDecrypted==null) return "";	//當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
-        int i = getPlainTextLength(byteDecrypted);
-        byte [] subArray = Arrays.copyOfRange(byteDecrypted, 0, i);
-        Log.d("SecureChat", "3DES decrypted length=" + i + ", byte array: " + new String(byteDecrypted) + ", new array: " + new String(subArray));
-        String newString = new String(subArray);
-        newString = new String(hex2Byte(newString));
-        //String newString = bytesToStringUTFCustom(subArray);
-        //Log.d("SecureChat", "3DES decrypted string: " + newString);
-        return newString;
+        try {
+            //byte[] byteStr = stringToBytesUTFCustom(src);	//將一個個 char 的字串轉成 byte array
+            byte[] byteStr = hex2Byte(src);    //將 16 進位碼的字串轉為 byte array
+            byte[] byteDecrypted = decryptMode(keybyte, byteStr);    //解密
+            if (byteDecrypted == null) return "";    //當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
+            int i = getPlainTextLength(byteDecrypted);
+            byte[] subArray = Arrays.copyOfRange(byteDecrypted, 0, i);
+            //Log.d("SecureChat", "3DES decrypted length=" + i + ", byte array: " + new String(byteDecrypted) + ", new array: " + new String(subArray));
+            String newString = new String(subArray);
+            newString = new String(hex2Byte(newString));
+            //String newString = bytesToStringUTFCustom(subArray);
+            //Log.d("SecureChat", "3DES decrypted string: " + newString);
+            return newString;
+        }catch (Exception e){
+            return "";
+        }
     }
 
     //keybyte為加密密鑰，長度為24字節

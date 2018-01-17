@@ -33,6 +33,7 @@
     <string name="msgUpdateYourProfile">Updating your profile</string>
     <string name="msgFailedToUpdateYourProfile">Failed to updating your profile</string>
     <string name="msgSuccess">Success</string>
+    <string name="msgProcessFailed">Process failed</string>
     <string name="labelYourName">Name</string>
     <string name="labelEnterUserName">Enter your name...</string>
     <string name="labelAutoDecryptMessage">Auto decrypt message</string>
@@ -43,4 +44,15 @@
     <string name="labelUpload">Upload</string>
     <string name="labelCamera">Camera</string>
     <string name="msgProcessBurnAfterReading">Process burn after reading</string>
+    <string name="labelUserProfile">Settings</string>
+    <string name="labelChangePinCode">Change PIN code</string>
+    <string name="labelLogout">Logout</string>
+    <string name="labelEnterCurrentPinCode">Enter current PIN code</string>
+    <string name="labelEnterNewPinCode">Enter new PIN code</string>
+    <string name="labelEnterNewPinCodeAgain">Enter new PIN code again</string>
+    <string name="msgChangePinCodeInProgress">Change PIN code in progress</string>
+    <string name="msgPleaseEnterNewPinCode">Please enter PIN code</string>
+    <string name="msgNewPinCodeIsTooShort">PIN code too short, should be 6~12 characters</string>
+    <string name="msgPleaseEnterNewPinCodeAgain">Please enter PIN code again</string>
+    <string name="msgNewPinCodesAreNotTheSame">New PIN codes are not the same</string>
 </resources>

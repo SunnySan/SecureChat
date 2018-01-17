@@ -143,25 +143,36 @@ public class ChatUsersActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
+            case R.id.userProfile:
+                goToUpdateUserProfile();
+                return true;
+            case R.id.changePinCode:
+                goToChangePinCode();
+                return true;
             case R.id.logout:
                 logOutuser();
                 return true;
-            case R.id.userProfile:
-                goToUpdateUserProfile();
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private void goToUpdateUserProfile(){
+        //Log.d("SecureChat", "goToUpdateUserProfile");
+        startActivity(new Intent(this, UpdateProfileActivity.class));
+    }
+
+    private void goToChangePinCode(){
+        //Log.d("SecureChat", "goToChangePinCode");
+        startActivity(new Intent(this, ChangePinCodeActivity.class));
+    }
+
     private void logOutuser(){
+        //Log.d("SecureChat", "goToLogout");
         FirebaseAuth.getInstance().signOut();
         goToHome();
         //now send user back to login screen
         //startActivity(new Intent(this, LoginActivity.class));
-    }
-
-    private void goToUpdateUserProfile(){
-        startActivity(new Intent(this, UpdateProfileActivity.class));
     }
 
 }

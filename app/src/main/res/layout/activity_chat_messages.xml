@@ -21,13 +21,6 @@
         android:transcriptMode="normal"
         />
 
-    <!-- A horizontal line between the chatbox and RecyclerView -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="#dfdfdf"
-        android:layout_marginBottom="0dp"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
