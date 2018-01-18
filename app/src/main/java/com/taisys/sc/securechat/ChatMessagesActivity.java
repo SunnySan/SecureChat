@@ -1,8 +1,11 @@
 package com.taisys.sc.securechat;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,7 +16,11 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -33,8 +40,21 @@ import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.MessagesAdapter;
 import com.taisys.sc.securechat.util.Utility;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.lqr.adapter.LQRAdapterForRecyclerView;
+import com.lqr.adapter.LQRViewHolder;
+import com.lqr.adapter.LQRViewHolderForRecyclerView;
+import com.lqr.adapter.OnItemClickListener;
+import com.lqr.audio.AudioPlayManager;
+import com.lqr.audio.AudioRecordManager;
+import com.lqr.audio.IAudioPlayListener;
+import com.lqr.audio.IAudioRecordListener;
+import com.lqr.recyclerview.LQRRecyclerView;
+
+import kr.co.namee.permissiongen.PermissionGen;
 
 public class ChatMessagesActivity extends AppCompatActivity {
 
@@ -46,6 +66,10 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private DatabaseReference mUsersRef;
     private List<ChatMessage> mMessagesList = new ArrayList<>();
     private MessagesAdapter adapter = null;
+
+    RelativeLayout mRoot;
+    private File mAudioDir;
+    private LQRAdapterForRecyclerView<File> mAdapter;
     private ImageButton mRecordAudioIconImageButton;
     private LinearLayout mRecordAudioLayout;
     private ImageButton mRecordAudioImageButton;
@@ -80,6 +104,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         mLayoutManager.setStackFromEnd(true);
         mChatsRecyclerView.setLayoutManager(mLayoutManager);
 
+        mRoot = (RelativeLayout) findViewById(R.id.rootChatMessage);
         mRecordAudioIconImageButton = (ImageButton)findViewById(R.id.recordAudioIconImagebutton);
         mRecordAudioLayout = (LinearLayout) findViewById(R.id.recordAudioLayoutChatMessage);
         mRecordAudioImageButton = (ImageButton)findViewById(R.id.greenMicrophoneChatMessage);
@@ -121,53 +146,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             }
         });
 
-        mRecordAudioIconImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mRecordAudioLayout.getVisibility()==View.VISIBLE) {
-                    mRecordAudioLayout.setVisibility(View.GONE);
-                }else{
-                    mRecordAudioLayout.setVisibility(View.VISIBLE);
-                    hideSoftKeyboard();
-                }
-
-            }
-        });
-
-        mRecordAudioImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
-            }
-        });
-
-        mRecordAudioImageButton.setOnTouchListener(new View.OnTouchListener(){
-            @Override
-            public boolean onTouch(View v,MotionEvent event){
-                if(event.getAction()== MotionEvent.ACTION_DOWN){  //按下的時候
-                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
-                }
-
-                if (event.getAction() == MotionEvent.ACTION_UP) {  //起來的時候
-                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_green);
-                }
-
-                return false;
-
-            }
-
-        });
-
-        mMessageEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    if (mRecordAudioLayout.getVisibility()==View.VISIBLE) {
-                        mRecordAudioLayout.setVisibility(View.GONE);
-                    }
-                }
-            }
-        });
+        initAudio();
 
     }
 
@@ -195,8 +174,12 @@ public class ChatMessagesActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        this.finish();
+    public void onBackPressed(){
+        if (mRecordAudioLayout.getVisibility()==View.VISIBLE) {
+            mRecordAudioLayout.setVisibility(View.GONE);
+        }else{
+            this.finish();
+        }
     }
 
     private void showWaiting(final String title, final String msg) {
@@ -486,4 +469,215 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
         disWaiting();
     }
+    /************************************************************************************************/
+    //以下是和錄音相關的程式，參考 http://www.qingpingshan.com/rjbc/az/248321.html 及 https://github.com/GitLqr/LQRAudioRecord
+
+    //初始化 audio 相關的東西
+    private void initAudio() {
+        PermissionGen.with(this)
+                .addRequestCode(100)
+                .permissions(Manifest.permission.RECORD_AUDIO
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        , Manifest.permission.WAKE_LOCK
+                        , Manifest.permission.READ_EXTERNAL_STORAGE)
+                .request();
+        mRecordAudioIconImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRecordAudioLayout.getVisibility() == View.VISIBLE) {
+                    mRecordAudioLayout.setVisibility(View.GONE);
+                } else {
+                    mRecordAudioLayout.setVisibility(View.VISIBLE);
+                    hideSoftKeyboard();
+                }
+
+            }
+        });
+
+        mRecordAudioImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
+            }
+        });
+
+        mRecordAudioImageButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {  //按下的時候
+                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
+                    AudioRecordManager.getInstance(ChatMessagesActivity.this).startRecord();
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_UP) {  //起來的時候
+                    AudioRecordManager.getInstance(ChatMessagesActivity.this).stopRecord();
+                    AudioRecordManager.getInstance(ChatMessagesActivity.this).destroyRecord();
+                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_green);
+                }
+
+                return false;
+
+            }
+
+        });
+
+        mMessageEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    if (mRecordAudioLayout.getVisibility() == View.VISIBLE) {
+                        mRecordAudioLayout.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
+
+        mMessageEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRecordAudioLayout.getVisibility() == View.VISIBLE) {
+                    mRecordAudioLayout.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        AudioRecordManager.getInstance(this).setMaxVoiceDuration(12);
+        mAudioDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/audio/");
+        if (!mAudioDir.exists()) {
+            Log.d("SecureChat", "create mAudioDir");
+            mAudioDir.mkdirs();
+        }
+        Log.d("SecureChat", "mAudioDir" + mAudioDir.getAbsolutePath() + ", " + mAudioDir.exists());
+
+        AudioRecordManager.getInstance(this).setAudioSavePath(mAudioDir.getAbsolutePath());
+
+        AudioRecordManager.getInstance(this).setAudioRecordListener(new IAudioRecordListener() {
+
+            private TextView mTimerTV;
+            private TextView mStateTV;
+            private ImageView mStateIV;
+            private PopupWindow mRecordWindow;
+
+            @Override
+            public void initTipView() {
+                View view = View.inflate(ChatMessagesActivity.this, R.layout.popup_audio_wi_vo, null);
+                mStateIV = (ImageView) view.findViewById(R.id.rc_audio_state_image);
+                mStateTV = (TextView) view.findViewById(R.id.rc_audio_state_text);
+                mTimerTV = (TextView) view.findViewById(R.id.rc_audio_timer);
+                mRecordWindow = new PopupWindow(view, -1, -1);
+                mRecordWindow.showAtLocation(mRoot, 17, 0, 0);
+                mRecordWindow.setFocusable(true);
+                mRecordWindow.setOutsideTouchable(false);
+                mRecordWindow.setTouchable(false);
+            }
+
+            @Override
+            public void setTimeoutTipView(int counter) {
+                if (this.mRecordWindow != null) {
+                    this.mStateIV.setVisibility(View.GONE);
+                    this.mStateTV.setVisibility(View.VISIBLE);
+                    this.mStateTV.setText(R.string.voice_rec);
+                    this.mStateTV.setBackgroundResource(R.drawable.bg_voice_popup);
+                    this.mTimerTV.setText(String.format("%s", new Object[]{Integer.valueOf(counter)}));
+                    this.mTimerTV.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void setRecordingTipView() {
+                if (this.mRecordWindow != null) {
+                    this.mStateIV.setVisibility(View.VISIBLE);
+                    this.mStateIV.setImageResource(R.mipmap.ic_volume_1);
+                    this.mStateTV.setVisibility(View.VISIBLE);
+                    this.mStateTV.setText(R.string.voice_rec);
+                    this.mStateTV.setBackgroundResource(R.drawable.bg_voice_popup);
+                    this.mTimerTV.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void setAudioShortTipView() {
+                if (this.mRecordWindow != null) {
+                    mStateIV.setImageResource(R.mipmap.ic_volume_wraning);
+                    mStateTV.setText(R.string.voice_short);
+                }
+            }
+
+            @Override
+            public void setCancelTipView() {
+                if (this.mRecordWindow != null) {
+                    this.mTimerTV.setVisibility(View.GONE);
+                    this.mStateIV.setVisibility(View.VISIBLE);
+                    this.mStateIV.setImageResource(R.mipmap.ic_volume_cancel);
+                    this.mStateTV.setVisibility(View.VISIBLE);
+                    this.mStateTV.setText(R.string.voice_cancel);
+                    this.mStateTV.setBackgroundResource(R.drawable.corner_voice_style);
+                }
+            }
+
+            @Override
+            public void destroyTipView() {
+                if (this.mRecordWindow != null) {
+                    this.mRecordWindow.dismiss();
+                    this.mRecordWindow = null;
+                    this.mStateIV = null;
+                    this.mStateTV = null;
+                    this.mTimerTV = null;
+                }
+            }
+
+            @Override
+            public void onStartRecord() {
+                //开始录制
+            }
+
+            @Override
+            public void onFinish(Uri audioPath, int duration) {
+                //发送文件
+                File file = new File(audioPath.getPath());
+                if (file.exists()) {
+                    Toast.makeText(getApplicationContext(), "录制成功", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onAudioDBChanged(int db) {
+                switch (db / 5) {
+                    case 0:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_1);
+                        break;
+                    case 1:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_2);
+                        break;
+                    case 2:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_3);
+                        break;
+                    case 3:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_4);
+                        break;
+                    case 4:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_5);
+                        break;
+                    case 5:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_6);
+                        break;
+                    case 6:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_7);
+                        break;
+                    default:
+                        this.mStateIV.setImageResource(R.mipmap.ic_volume_8);
+                }
+            }
+        });
+    }   //private void initAudio(){
+
+    private boolean isCancelled(View view, MotionEvent event) {
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        if (event.getRawX() < location[0] || event.getRawX() > location[0] + view.getWidth() || event.getRawY() < location[1] - 40) {
+            return true;
+        }
+        return false;
+    }
+
 }

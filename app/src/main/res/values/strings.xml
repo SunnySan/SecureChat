@@ -58,4 +58,8 @@
     <string name="msgNewPinCodeIsTooShort">PIN code too short, should be 6~12 characters</string>
     <string name="msgPleaseEnterNewPinCodeAgain">Please enter PIN code again</string>
     <string name="msgNewPinCodesAreNotTheSame">New PIN codes are not the same</string>
+    <string name="voice_rec">Recording</string>
+    <string name="voice_cancel">Finger up to cancel</string>
+    <string name="voice_short">Record time too short</string>
+    <string name="voice_failure">Recording failed</string>
 </resources>
