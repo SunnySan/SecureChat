@@ -197,7 +197,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                 }else{
                     //Toast.makeText(ChatMessagesActivity.this, "Message sent successfully!", Toast.LENGTH_SHORT).show();
                     mMessageEditText.setText(null);
-                    hideSoftKeyboard();
+                    //hideSoftKeyboard();
                 }
             }
         });

@@ -174,7 +174,8 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         // - replace the contents of the view with that element
         ChatMessage msg = mMessagesList.get(position);
         Log.d("SecureChat", "onBindViewHolder, position= " + position + ", decrypted=" + mMessagesList.get(position).getDecryptedByChatRoom() + ", message= " + msg.getMessage());
-        holder.messageTextView.setText(msg.getMessage());   //顯示被加密過的訊息(也有可能是解密過的，因為用戶滑動螢幕時，此訊息若跑到foreground，也會呼叫 onBindViewHolder)
+
+        //holder.messageTextView.setText(msg.getMessage());   //顯示被加密過的訊息(也有可能是解密過的，因為用戶滑動螢幕時，此訊息若跑到foreground，也會呼叫 onBindViewHolder)
         /*
                 if (msg.getDecrypted()) {
                     holder.messageTextView.setText(msg.getMessage());
@@ -199,7 +200,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             holder.isSentMessage = true;
         }
         if (holder.timeTextView!=null) holder.timeTextView.setText(changeTimeMillisToDateTime(msg.getCreatedAt()));
-        if (!mMessagesList.get(position).getDecryptedByChatRoom()) holder.originalMessage = msg.getMessage();
+        if (!mMessagesList.get(position).getDecryptedByChatRoom()) {
+            holder.originalMessage = msg.getMessage();
+            holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptMessage));   //顯示被加密過的訊息
+        }else{
+            holder.messageTextView.setText(msg.getMessage());   //顯示解密過的訊息(這是用戶滑動螢幕時，此訊息跑到foreground，然後呼叫 onBindViewHolder)
+        }
         //holder.bDecrypted = msg.getDecrypted();
         holder.bDecrypted = mMessagesList.get(position).getDecryptedByChatRoom();
         holder.dbKey = msg.getDbKey();

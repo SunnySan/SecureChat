@@ -39,6 +39,8 @@ public class SignUpActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference mUsersDBref;
 
+    private String userDisplayName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,6 +117,8 @@ public class SignUpActivity extends AppCompatActivity {
                     Utility.showMessage(myContext, getString(R.string.labelEnterYourName));
                     return;
                 }
+
+                userDisplayName = name;
 
                 //顯示Progress對話視窗
                 showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgGeneratingRsaKey));
@@ -370,7 +374,9 @@ public class SignUpActivity extends AppCompatActivity {
                                     if (task.isSuccessful()) {
                                         Log.d("SecureChat", "User profile updated. Display name= " + newUser.getDisplayName());
                                         /***CREATE USER IN FIREBASE DB AND REDIRECT ON SUCCESS**/
-                                        createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
+                                        //createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
+                                        //createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
+                                        createUserInDb(newUser.getUid(), userDisplayName, newUser.getEmail(), publicKey);
 
                                     }else{
                                         //error

@@ -3,6 +3,7 @@
     <string name="msgSystemInfo">System Info.</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="labalBack">Back</string>
     <string name="msgPleaseWait">Please wait...</string>
     <string name="msgVerifyPinCode">Verify PIN code...</string>
     <string name="labelPleaseEnterPinCode">Please enter PIN code</string>

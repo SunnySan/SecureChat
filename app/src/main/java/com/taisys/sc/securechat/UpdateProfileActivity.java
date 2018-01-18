@@ -147,7 +147,7 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     }else{
                         disWaiting();
                         Utility.showToast(myContext, getString(R.string.msgSuccess));
-                        closeActivity();
+                        //closeActivity();
                     }
                 } catch (Exception e) {
                     disWaiting();
@@ -342,7 +342,7 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     mUserDBRef.child(mCurrentUserID).updateChildren(childUpdates);
                     Utility.showToast(myContext, getString(R.string.msgSuccess));
                     disWaiting();
-                    closeActivity();
+                    //closeActivity();
                 }
 
             }
