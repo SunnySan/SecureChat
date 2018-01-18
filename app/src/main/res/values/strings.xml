@@ -19,6 +19,8 @@
     <string name="msgFailToReadPublicKey">Unable to read secret key. </string>
     <string name="msgFailToSignUpAccount">Failed to sign up your account. </string>
     <string name="msgFailedToRetrieveDataFromFirebase">Failed to retrieve message list</string>
+    <string name="labelEnterMessage">Enter message...</string>
+    <string name="msgPleaseEnterYourMessage">Please enter your message</string>
     <string name="msgClickMeToDecryptMessage">Click me to decrypt message</string>
     <string name="msgDecryptingMessage">Decrypting message, please wait...</string>
     <string name="msgGenerating3DESKey">Preparing secret key.</string>

@@ -8,10 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -44,6 +46,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private DatabaseReference mUsersRef;
     private List<ChatMessage> mMessagesList = new ArrayList<>();
     private MessagesAdapter adapter = null;
+    private ImageButton mRecordAudioIconImageButton;
+    private LinearLayout mRecordAudioLayout;
+    private ImageButton mRecordAudioImageButton;
 
     private String mReceiverId;
     private String mReceiverName;
@@ -75,6 +80,12 @@ public class ChatMessagesActivity extends AppCompatActivity {
         mLayoutManager.setStackFromEnd(true);
         mChatsRecyclerView.setLayoutManager(mLayoutManager);
 
+        mRecordAudioIconImageButton = (ImageButton)findViewById(R.id.recordAudioIconImagebutton);
+        mRecordAudioLayout = (LinearLayout) findViewById(R.id.recordAudioLayoutChatMessage);
+        mRecordAudioImageButton = (ImageButton)findViewById(R.id.greenMicrophoneChatMessage);
+        mRecordAudioLayout.setVisibility(View.GONE);
+
+
         //init Firebase
         mMessagesDBRef = FirebaseDatabase.getInstance().getReference().child("Messages");
         mUsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
@@ -102,7 +113,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
 
                 if(message.isEmpty()){
-                    Toast.makeText(ChatMessagesActivity.this, "You must enter a message", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ChatMessagesActivity.this, getString(R.string.msgPleaseEnterYourMessage), Toast.LENGTH_SHORT).show();
                 }else {
                     //message is entered, send
                     sendMessageToFirebase(message, senderId, mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
@@ -110,8 +121,53 @@ public class ChatMessagesActivity extends AppCompatActivity {
             }
         });
 
+        mRecordAudioIconImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRecordAudioLayout.getVisibility()==View.VISIBLE) {
+                    mRecordAudioLayout.setVisibility(View.GONE);
+                }else{
+                    mRecordAudioLayout.setVisibility(View.VISIBLE);
+                    hideSoftKeyboard();
+                }
 
+            }
+        });
 
+        mRecordAudioImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
+            }
+        });
+
+        mRecordAudioImageButton.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v,MotionEvent event){
+                if(event.getAction()== MotionEvent.ACTION_DOWN){  //按下的時候
+                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_UP) {  //起來的時候
+                    mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_green);
+                }
+
+                return false;
+
+            }
+
+        });
+
+        mMessageEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    if (mRecordAudioLayout.getVisibility()==View.VISIBLE) {
+                        mRecordAudioLayout.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
 
     }
 
