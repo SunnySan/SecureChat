@@ -5,6 +5,7 @@ package com.taisys.sc.securechat.model;
  */
 
 public class ChatMessage {
+    private String messageType; //訊息類型，可為 text、audio、file
     private String message;     //訊息內容 (以 3DES key加密過)
     private String senderId;    //Sender 在 firebase 的 ID
     private String receiverId;  //Receiver 在 firebase 的 ID
@@ -21,7 +22,8 @@ public class ChatMessage {
     public ChatMessage() {
     }
 
-    public ChatMessage(String message, String senderId, String receiverId, String secretKeyForSender, String secretKeyForReceiver) {
+    public ChatMessage(String messageType, String message, String senderId, String receiverId, String secretKeyForSender, String secretKeyForReceiver) {
+        this.messageType = messageType;
         this.message = message;
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -34,6 +36,14 @@ public class ChatMessage {
         this.decryptedByChatRoom = false;
         this.secretKeyForSender = secretKeyForSender;
         this.secretKeyForReceiver = secretKeyForReceiver;
+    }
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 
     public String getMessage() {

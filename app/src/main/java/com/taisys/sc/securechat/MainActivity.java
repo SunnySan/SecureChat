@@ -1,5 +1,6 @@
 package com.taisys.sc.securechat;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +19,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.taisys.oti.Card;
 import com.taisys.oti.Card.SCSupported;
 import com.taisys.sc.securechat.util.Utility;
+
+import kr.co.namee.permissiongen.PermissionGen;
 
 public class MainActivity extends AppCompatActivity {
     private Card mCard = new Card();
@@ -40,6 +43,23 @@ public class MainActivity extends AppCompatActivity {
 
         Utility.setMySetting(myContext, "iccid", "");   //先把程式裡的 iccid 設定清除
         setOnClickListener();
+
+        PermissionGen.with(this)
+                .addRequestCode(100)
+                .permissions(
+                        Manifest.permission.READ_PHONE_STATE
+                        , Manifest.permission.READ_SMS
+                        , Manifest.permission.SEND_SMS
+                        , Manifest.permission.READ_CONTACTS
+                        , Manifest.permission.WRITE_CONTACTS
+                        , Manifest.permission.RECEIVE_SMS
+                        , Manifest.permission.ACCESS_NETWORK_STATE
+                        , Manifest.permission.READ_EXTERNAL_STORAGE
+                        , Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        , android.Manifest.permission.RECORD_AUDIO
+                        , android.Manifest.permission.WAKE_LOCK)
+                .request();
+
     }
 
     @Override

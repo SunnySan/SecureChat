@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -25,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import static com.taisys.sc.securechat.util.Utility.hex2Byte;
 
@@ -51,7 +52,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         //這是 Sent 訊息的 ViewHolder
         // each data item is just a string in this case
         public TextView messageTextView;
-        public ImageView imageImageView;
+        public CircleImageView imageImageView;
         public TextView nameTextView;
         public TextView timeTextView;
         public String originalMessage;  //儲存原始訊息內容
@@ -68,7 +69,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             super(v);
             layout = v;
             messageTextView = (TextView) v.findViewById(R.id.chatMsgTextView);
-            imageImageView = (ImageView) v.findViewById(R.id.chatImage);
+            imageImageView = (CircleImageView) v.findViewById(R.id.chatImage);
             nameTextView = (TextView) v.findViewById(R.id.chatNameTextView);
             timeTextView = (TextView) v.findViewById(R.id.chatTimeTextView);
 

@@ -62,4 +62,9 @@
     <string name="voice_cancel">Finger up to cancel</string>
     <string name="voice_short">Record time too short</string>
     <string name="voice_failure">Recording failed</string>
+    <string name="voice_success">Recording completed</string>
+    <string name="msgPleaseRecordAudioFirst">Please record audio first</string>
+    <string name="msgFailedToEncryptAudioFile">Failed to encrypt your audio</string>
+    <string name="msgEncryptingAndSendingData">Encrypting and sending data</string>
+    <string name="msgFailedToStoreYourFile">Failed to send your file</string>
 </resources>

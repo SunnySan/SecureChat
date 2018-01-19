@@ -17,8 +17,6 @@
     <!-- Used to load images from the gallery content provider. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Used to load images for contact photos. -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <uses-permission android:name = "android.permission.RECORD_AUDIO" />
     <!--播音-->
@@ -40,19 +38,19 @@
             android:name="org.simalliance.openmobileapi"
             android:required="false" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SignUpActivity" />
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".ChatUsersActivity"></activity>
-        <activity android:name=".UpdateProfileActivity" />
-        <activity android:name=".ChatMessagesActivity" />
-        <activity android:name=".ChangePinCodeActivity"></activity>
+        <activity android:name=".SignUpActivity" android:screenOrientation="portrait" />
+        <activity android:name=".LoginActivity" android:screenOrientation="portrait" />
+        <activity android:name=".ChatUsersActivity" android:screenOrientation="portrait" />
+        <activity android:name=".UpdateProfileActivity" android:screenOrientation="portrait" />
+        <activity android:name=".ChatMessagesActivity" android:screenOrientation="portrait" />
+        <activity android:name=".ChangePinCodeActivity" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

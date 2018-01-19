@@ -45,14 +45,14 @@
             android:layout_height="wrap_content" />
 
         <ImageButton
-            android:id="@+id/sendMessageImagebutton"
+            android:id="@+id/sendMessageImageButtonChatMessage"
             android:layout_width="0dp"
             android:layout_weight="2"
             android:src="@android:drawable/ic_menu_send"
             android:layout_height="wrap_content" />
 
         <ImageButton
-            android:id="@+id/recordAudioIconImagebutton"
+            android:id="@+id/recordAudioIconImageButtonChatMessage"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:src="@android:drawable/ic_btn_speak_now"
@@ -64,17 +64,36 @@
         android:id="@+id/recordAudioLayoutChatMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:weightSum="4"
+        android:weightSum="3"
         android:minHeight="200dp"
         android:background="#ffffff"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal">
 
         <ImageButton
-            android:id="@+id/greenMicrophoneChatMessage"
-            android:layout_width="wrap_content"
+            android:id="@+id/greenMicrophoneImageButtonChatMessage"
             android:layout_height="200dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:src="@drawable/microphone_640_green"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"/>
+
+        <ImageButton
+            android:id="@+id/playAudioImageButtonChatMessage"
+            android:layout_height="200dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:src="@drawable/audio_animation_right_list"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"/>
+
+        <ImageButton
+            android:id="@+id/sendAudioImageButtonChatMessage"
+            android:layout_height="200dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_send"
             android:layout_gravity="center"
             android:scaleType="fitCenter"/>
 

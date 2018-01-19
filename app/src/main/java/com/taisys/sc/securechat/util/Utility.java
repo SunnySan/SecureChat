@@ -10,6 +10,11 @@ import android.widget.Toast;
 
 import com.taisys.sc.securechat.R;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -22,6 +27,7 @@ import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
@@ -271,6 +277,105 @@ public class Utility {
         return null;
     }
 
+    /********************************以下是檔案的加解密*******************************/
 
+    private static final String AlgorithmForFile = "DESede/CBC/PKCS5Padding"; //(對檔案進行加解密用的)定義加密算法,可用 DES,DESede,Blowfish
+
+    /**
+     * 將傳入的檔案進行加密
+     * 回傳加密後的檔案
+     */
+    public static File encryptFile(byte[] keybyte, File originalFile) throws Exception
+    {
+        InputStream in = null;
+        OutputStream out = null;
+        CipherOutputStream cos = null;
+        try {
+            File encryptFile = new File(originalFile.getParentFile().getAbsolutePath() + "/encrypt_" + originalFile.getName());
+
+            in = new FileInputStream(originalFile);
+            out = new FileOutputStream(encryptFile);
+
+            //生成密鑰
+            SecretKey deskey = new SecretKeySpec(keybyte, Algorithm);
+            IvParameterSpec iv = new IvParameterSpec(new byte[8]);
+
+            // Create and initialize the encryption engine
+            Cipher cipher = Cipher.getInstance(AlgorithmForFile);
+            cipher.init(Cipher.ENCRYPT_MODE, deskey, iv);
+
+            // Create a special output stream to do the work for us
+            cos = new CipherOutputStream(out, cipher);
+
+            // Read from the input and write to the encrypting output stream
+            byte[] buffer = new byte[128];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                cos.write(buffer, 0, bytesRead);
+            }
+            cos.flush();
+            cos.close();
+
+
+            // For extra security, don't leave any plaintext hanging around memory.
+            java.util.Arrays.fill(buffer, (byte) 0);
+
+            return encryptFile;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }finally{
+            if(in!=null)in.close();
+            if(out!=null)out.close();
+            if(cos!=null)cos.close();
+        }
+    }
+
+
+    /**
+     * 將傳入的檔案進行解密
+     * 回傳解密後的檔案
+     */
+    public static File decryptFile(byte[] keybyte, File encryptFile) throws Exception
+    {
+        InputStream in = null;
+        OutputStream out = null;
+
+        try
+        {
+            File decryptFile = new File(encryptFile.getParentFile().getAbsolutePath()+"/decrypt_"+encryptFile.getName());
+
+            in = new FileInputStream(encryptFile);
+            out = new FileOutputStream(decryptFile);
+
+            //生成密鑰
+            SecretKey deskey = new SecretKeySpec(keybyte, Algorithm);
+            IvParameterSpec iv = new IvParameterSpec(new byte[8]);
+
+            // Create and initialize the decryption engine
+            Cipher cipher = Cipher.getInstance(AlgorithmForFile);
+            //cipher.init(Cipher.DECRYPT_MODE, key);
+            cipher.init(Cipher.DECRYPT_MODE, deskey, iv);
+
+            // Read bytes, decrypt, and write them out.
+            byte[] buffer = new byte[2048];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(cipher.update(buffer, 0, bytesRead));
+            }
+
+            // Write out the final bunch of decrypted bytes
+            out.write(cipher.doFinal());
+            out.flush();
+
+            return decryptFile;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }finally{
+            if(in!=null)in.close();in=null;
+            if(out!=null)out.close();out=null;
+        }
+    }
 
 }

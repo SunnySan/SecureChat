@@ -6,7 +6,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -15,6 +14,8 @@ import com.taisys.sc.securechat.R;
 import com.taisys.sc.securechat.model.User;
 
 import java.util.List;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * Created by sunny.sun on 2018/1/10.
@@ -33,7 +34,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView personNameTxtV;
-        public ImageView personImageImgV;
+        public CircleImageView personImageImgV;
 
 
         public View layout;
@@ -42,7 +43,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
             super(v);
             layout = v;
             personNameTxtV = (TextView) v.findViewById(R.id.userName);
-            personImageImgV = (ImageView) v.findViewById(R.id.userImage);
+            personImageImgV = (CircleImageView) v.findViewById(R.id.userImage);
 
 
 

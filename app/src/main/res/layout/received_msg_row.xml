@@ -12,7 +12,7 @@
         android:orientation="horizontal"
         android:paddingBottom="10dp">
 
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/chatImage"
             android:src="@mipmap/ic_launcher"
             android:layout_width="48dp"

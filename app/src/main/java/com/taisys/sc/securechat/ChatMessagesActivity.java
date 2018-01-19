@@ -3,6 +3,7 @@ package com.taisys.sc.securechat;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -32,6 +33,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.lqr.adapter.LQRAdapterForRecyclerView;
+import com.lqr.audio.AudioPlayManager;
+import com.lqr.audio.AudioRecordManager;
+import com.lqr.audio.IAudioPlayListener;
+import com.lqr.audio.IAudioRecordListener;
 import com.taisys.oti.Card;
 import com.taisys.oti.Card.SCSupported;
 import com.taisys.sc.securechat.Application.App;
@@ -41,18 +51,10 @@ import com.taisys.sc.securechat.util.MessagesAdapter;
 import com.taisys.sc.securechat.util.Utility;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.lqr.adapter.LQRAdapterForRecyclerView;
-import com.lqr.adapter.LQRViewHolder;
-import com.lqr.adapter.LQRViewHolderForRecyclerView;
-import com.lqr.adapter.OnItemClickListener;
-import com.lqr.audio.AudioPlayManager;
-import com.lqr.audio.AudioRecordManager;
-import com.lqr.audio.IAudioPlayListener;
-import com.lqr.audio.IAudioRecordListener;
-import com.lqr.recyclerview.LQRRecyclerView;
 
 import kr.co.namee.permissiongen.PermissionGen;
 
@@ -64,6 +66,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private ImageButton mSendImageButton;
     private DatabaseReference mMessagesDBRef;
     private DatabaseReference mUsersRef;
+    private StorageReference mAudioStorageRef;
     private List<ChatMessage> mMessagesList = new ArrayList<>();
     private MessagesAdapter adapter = null;
 
@@ -73,6 +76,10 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private ImageButton mRecordAudioIconImageButton;
     private LinearLayout mRecordAudioLayout;
     private ImageButton mRecordAudioImageButton;
+    private ImageButton mPlayAudioImageButton;
+    private ImageButton mSendAudioImageButton;
+    private Uri mAudioUri = null;
+    private DatabaseReference mAudioDbRef;
 
     private String mReceiverId;
     private String mReceiverName;
@@ -97,7 +104,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         //initialize the views
         mChatsRecyclerView = (RecyclerView)findViewById(R.id.messagesRecyclerView);
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mSendImageButton = (ImageButton)findViewById(R.id.sendMessageImagebutton);
+        mSendImageButton = (ImageButton)findViewById(R.id.sendMessageImageButtonChatMessage);
         mChatsRecyclerView.setHasFixedSize(true);
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
@@ -105,15 +112,19 @@ public class ChatMessagesActivity extends AppCompatActivity {
         mChatsRecyclerView.setLayoutManager(mLayoutManager);
 
         mRoot = (RelativeLayout) findViewById(R.id.rootChatMessage);
-        mRecordAudioIconImageButton = (ImageButton)findViewById(R.id.recordAudioIconImagebutton);
+        mRecordAudioIconImageButton = (ImageButton)findViewById(R.id.recordAudioIconImageButtonChatMessage);
         mRecordAudioLayout = (LinearLayout) findViewById(R.id.recordAudioLayoutChatMessage);
-        mRecordAudioImageButton = (ImageButton)findViewById(R.id.greenMicrophoneChatMessage);
         mRecordAudioLayout.setVisibility(View.GONE);
+        mRecordAudioImageButton = (ImageButton)findViewById(R.id.greenMicrophoneImageButtonChatMessage);
+        mPlayAudioImageButton = (ImageButton)findViewById(R.id.playAudioImageButtonChatMessage);
+        mSendAudioImageButton = (ImageButton)findViewById(R.id.sendAudioImageButtonChatMessage);
+
 
 
         //init Firebase
         mMessagesDBRef = FirebaseDatabase.getInstance().getReference().child("Messages");
         mUsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
+        mAudioStorageRef = FirebaseStorage.getInstance().getReference().child("Audios");  //放audio檔案用的
 
         myContext = this;
 
@@ -141,7 +152,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                     Toast.makeText(ChatMessagesActivity.this, getString(R.string.msgPleaseEnterYourMessage), Toast.LENGTH_SHORT).show();
                 }else {
                     //message is entered, send
-                    sendMessageToFirebase(message, senderId, mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
+                    sendMessageToFirebase(null, "text", message, senderId, mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
                 }
             }
         });
@@ -211,23 +222,33 @@ public class ChatMessagesActivity extends AppCompatActivity {
     }
 
 
-    private void sendMessageToFirebase(String message, String senderId, String receiverId, byte[] byte3DESKey, String encryptedSecretKeyForSender, String encryptedSecretKeyForReceiver){
+    private void sendMessageToFirebase(DatabaseReference db, String messageType, String message, String senderId, String receiverId, byte[] byte3DESKey, String encryptedSecretKeyForSender, String encryptedSecretKeyForReceiver){
         //mMessagesList.clear();
         if (byte3DESKey==null) {
             Utility.showMessage(myContext, getString(R.string.msgUnableToFind3DESSecretKey));
             return;
         }
-        //把訊息內容用 3DES 加密起來
-        String encryptedMessage = Utility.encryptString(byte3DESKey, message);
-        Log.d("SecureChat", "encrypt message with 3DES key: " + Utility.byte2Hex(byte3DESKey));
-        if (encryptedMessage==null || encryptedMessage.length()<1){
-            Log.e("SecureChat", "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
-            Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptMessage));
-            return;
+
+        ChatMessage newMsg = null;
+
+        if (messageType.equals("text")){
+            //把訊息內容用 3DES 加密起來
+            String encryptedMessage = Utility.encryptString(byte3DESKey, message);
+            Log.d("SecureChat", "encrypt message with 3DES key: " + Utility.byte2Hex(byte3DESKey));
+            if (encryptedMessage==null || encryptedMessage.length()<1){
+                Log.e("SecureChat", "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
+                Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptMessage));
+                return;
+            }
+            newMsg = new ChatMessage(messageType, encryptedMessage, senderId, receiverId, encryptedSecretKeyForSender, encryptedSecretKeyForReceiver);
         }
-        ChatMessage newMsg = new ChatMessage(encryptedMessage, senderId, receiverId, encryptedSecretKeyForSender, encryptedSecretKeyForReceiver);
+
+        if (messageType.equals("audio")){
+            newMsg = new ChatMessage(messageType, message, senderId, receiverId, encryptedSecretKeyForSender, encryptedSecretKeyForReceiver);
+        }
+        if (db==null) db = mMessagesDBRef.push();
         newMsg.setCreatedAt(System.currentTimeMillis());
-        mMessagesDBRef.push().setValue(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
+        db.setValue(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if(!task.isSuccessful()){
@@ -481,6 +502,11 @@ public class ChatMessagesActivity extends AppCompatActivity {
                         , Manifest.permission.WAKE_LOCK
                         , Manifest.permission.READ_EXTERNAL_STORAGE)
                 .request();
+
+        mRecordAudioImageButton.setEnabled(true);
+        mPlayAudioImageButton.setEnabled(false);
+        mSendAudioImageButton.setEnabled(false);
+
         mRecordAudioIconImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -488,16 +514,12 @@ public class ChatMessagesActivity extends AppCompatActivity {
                     mRecordAudioLayout.setVisibility(View.GONE);
                 } else {
                     mRecordAudioLayout.setVisibility(View.VISIBLE);
+                    mRecordAudioImageButton.setEnabled(true);
+                    mPlayAudioImageButton.setEnabled(false);
+                    mSendAudioImageButton.setEnabled(false);
                     hideSoftKeyboard();
                 }
 
-            }
-        });
-
-        mRecordAudioImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
             }
         });
 
@@ -507,6 +529,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {  //按下的時候
                     mRecordAudioImageButton.setImageResource(R.drawable.microphone_640_red);
                     AudioRecordManager.getInstance(ChatMessagesActivity.this).startRecord();
+                    mRecordAudioImageButton.performClick();
+                    mPlayAudioImageButton.setEnabled(false);
+                    mSendAudioImageButton.setEnabled(false);
                 }
 
                 if (event.getAction() == MotionEvent.ACTION_UP) {  //起來的時候
@@ -541,7 +566,21 @@ public class ChatMessagesActivity extends AppCompatActivity {
             }
         });
 
-        AudioRecordManager.getInstance(this).setMaxVoiceDuration(12);
+        mPlayAudioImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playAudio();
+            }
+        });
+
+        mSendAudioImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                encryptAudioFileAndSendOut();
+            }
+        });
+
+        AudioRecordManager.getInstance(this).setMaxVoiceDuration(60);
         mAudioDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/audio/");
         if (!mAudioDir.exists()) {
             Log.d("SecureChat", "create mAudioDir");
@@ -636,7 +675,16 @@ public class ChatMessagesActivity extends AppCompatActivity {
                 //发送文件
                 File file = new File(audioPath.getPath());
                 if (file.exists()) {
-                    Toast.makeText(getApplicationContext(), "录制成功", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.voice_success), Toast.LENGTH_SHORT).show();
+                    mRecordAudioImageButton.setEnabled(true);
+                    mPlayAudioImageButton.setEnabled(true);
+                    mSendAudioImageButton.setEnabled(true);
+                    mAudioUri = audioPath;
+                }else{
+                    Toast.makeText(getApplicationContext(), getString(R.string.voice_failure), Toast.LENGTH_SHORT).show();
+                    mRecordAudioImageButton.setEnabled(true);
+                    mPlayAudioImageButton.setEnabled(false);
+                    mSendAudioImageButton.setEnabled(false);
                 }
             }
 
@@ -680,4 +728,115 @@ public class ChatMessagesActivity extends AppCompatActivity {
         return false;
     }
 
+    private void playAudio(){
+        if (mAudioUri==null) return;
+        AudioPlayManager.getInstance().stopPlay();
+        AudioPlayManager.getInstance().startPlay(ChatMessagesActivity.this, mAudioUri, new IAudioPlayListener() {
+            @Override
+            public void onStart(Uri var1) {
+                if (mPlayAudioImageButton != null && mPlayAudioImageButton.getDrawable() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mPlayAudioImageButton.getDrawable();
+                    animation.start();
+                }
+            }
+
+            @Override
+            public void onStop(Uri var1) {
+                if (mPlayAudioImageButton != null && mPlayAudioImageButton.getDrawable() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mPlayAudioImageButton.getDrawable();
+                    animation.stop();
+                    animation.selectDrawable(0);
+                }
+
+            }
+
+            @Override
+            public void onComplete(Uri var1) {
+                if (mPlayAudioImageButton != null && mPlayAudioImageButton.getDrawable() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mPlayAudioImageButton.getDrawable();
+                    animation.stop();
+                    animation.selectDrawable(0);
+                }
+            }
+        });
+    }
+
+    //將 audio 檔加密然後送出
+    private void encryptAudioFileAndSendOut(){
+        mAudioDbRef = null;
+
+        if (mAudioUri==null){
+            Utility.showToast(myContext, getString(R.string.msgPleaseRecordAudioFirst));
+            return;
+        }
+        if (m3DESSecretKey==null){
+            Utility.showToast(myContext, getString(R.string.msgUnableToFind3DESSecretKey));
+            return;
+        }
+
+        showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgEncryptingAndSendingData));
+        File originalFile = null;
+        File encryptedFile = null;
+        try{
+            originalFile = new File(mAudioUri.getPath());
+            encryptedFile = Utility.encryptFile(m3DESSecretKey, originalFile);
+            uploadAudioToFirebaseStorage(encryptedFile);
+        }catch (Exception e){
+            if (encryptedFile!=null && encryptedFile.exists()) encryptedFile.delete();
+            Utility.showToast(myContext, getString(R.string.msgFailedToEncryptAudioFile));
+            disWaiting();
+            return;
+        }finally {
+            if (originalFile!=null && originalFile.exists()) originalFile.delete();
+        }
+    }
+
+    private void uploadAudioToFirebaseStorage(File encryptedFile){
+        String senderId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        InputStream in = null;
+        try {
+            in = new FileInputStream(encryptedFile);
+            byte[] fileByteArray = new byte[(int) encryptedFile.length()];
+            in.read(fileByteArray);
+            in.close();
+
+            //先在 Messages database 建立一筆資料，取得這筆資料的 key，然後在 storage 用相同的 key 建資料
+            mAudioDbRef = mMessagesDBRef.push();
+            String dbKey = mAudioDbRef.getKey();
+
+            // Create file metadata with property to delete
+            StorageMetadata metadata = new StorageMetadata.Builder()
+                    .setContentType("audio/m4a")
+                    .setContentLanguage("en")
+                    .build();
+            Log.d("SecureChat", "upload audio file message to storage");
+            mAudioStorageRef.child(dbKey).putBytes(fileByteArray, metadata).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                    if(!task.isSuccessful()){
+                        //error saving audio
+                        disWaiting();
+                        Utility.showMessage(myContext, getString(R.string.msgFailedToStoreYourFile));
+                        return;
+                    }else{
+                        //success saving audio
+                        String storageFileLink = task.getResult().getDownloadUrl().toString();
+                        //送 message 出去給 receiver
+                        Log.d("SecureChat", "send audio file message to Messages database");
+                        sendMessageToFirebase(mAudioDbRef, "audio", storageFileLink, FirebaseAuth.getInstance().getCurrentUser().getUid(), mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
+                        disWaiting();
+                        return;
+                    }
+                }
+            });
+
+        }catch (Exception e){
+            disWaiting();
+            Utility.showMessage(myContext, getString(R.string.msgProcessFailed));
+        }finally {
+            if (encryptedFile!=null && encryptedFile.exists()) encryptedFile.delete();
+        }
+
+        return;
+    }
 }
