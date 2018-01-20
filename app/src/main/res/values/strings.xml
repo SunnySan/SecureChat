@@ -67,4 +67,8 @@
     <string name="msgFailedToEncryptAudioFile">Failed to encrypt your audio</string>
     <string name="msgEncryptingAndSendingData">Encrypting and sending data</string>
     <string name="msgFailedToStoreYourFile">Failed to send your file</string>
+    <string name="msgFailedToFindAudioFile">Failed to find audio file</string>
+    <string name="msgFailedToDownloadAudioFile">Failed to download audio file</string>
+    <string name="msgFailedToDecryptAudioFile">Failed to decrypt audio file</string>
+
 </resources>

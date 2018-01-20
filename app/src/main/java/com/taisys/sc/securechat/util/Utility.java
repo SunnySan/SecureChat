@@ -23,7 +23,10 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.TimeZone;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -72,6 +75,15 @@ public class Utility {
                     }
                 })
                 .show();
+    }
+
+    public static String changeTimeMillisToDateTime(long timeMillis){
+        if (timeMillis<1) return "";
+        //SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm");
+        sdf.setTimeZone(TimeZone.getDefault());
+        Date resultdate = new Date(timeMillis);
+        return sdf.format(resultdate);
     }
 
     //取得 byte array 每個 byte 的 16 進位碼

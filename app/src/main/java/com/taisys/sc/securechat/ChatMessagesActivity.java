@@ -581,7 +581,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         });
 
         AudioRecordManager.getInstance(this).setMaxVoiceDuration(60);
-        mAudioDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/audio/");
+        mAudioDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/SecureChat/audio/");
         if (!mAudioDir.exists()) {
             Log.d("SecureChat", "create mAudioDir");
             mAudioDir.mkdirs();
