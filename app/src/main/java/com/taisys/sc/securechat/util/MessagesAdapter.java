@@ -2,6 +2,7 @@ package com.taisys.sc.securechat.util;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -20,9 +21,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.lqr.audio.AudioPlayManager;
+import com.lqr.audio.IAudioPlayListener;
 import com.squareup.picasso.Picasso;
 import com.taisys.oti.Card;
 import com.taisys.sc.securechat.Application.App;
+import com.taisys.sc.securechat.ChatMessagesActivity;
 import com.taisys.sc.securechat.R;
 import com.taisys.sc.securechat.model.ChatMessage;
 
@@ -81,6 +85,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         public String encryptedSecretKeyForReceiver;  //使用此訊息 receiver public key 加密過的 3DES key
         public int positionOfMessageList;   //此筆訊息在mMessagesList中的index，當訊息解密後須修改mMessagesList中此訊息內容，不然手機畫面refresh後顯示的會是未解密訊息
         public boolean isSentMessage;   //此訊息是否是這個用戶送出的訊息
+        public String localAudioFileUri;
 
         public View layout;
 
@@ -98,9 +103,17 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         @Override
         public void onClick(View view) {
             //int position = getLayoutPosition();
-            if (bDecrypted == true) return;  //已經解密完成，不用再處理了
-            if (originalMessage == null || originalMessage.length()<1) return;  //這個條件應該不會發生，只是以防萬一
+            mCurrentViewHolder = this;
             String messageType = mMessagesList.get(positionOfMessageList).getMessageType();
+            if (bDecrypted == true){
+                if (messageType.equals("audio")) {
+                    changeViewHolderToAudioPlayer();
+                    return;
+                }else{
+                    return;  //已經解密完成，不用再處理了
+                }
+            }
+            if (originalMessage == null || originalMessage.length()<1) return;  //這個條件應該不會發生，只是以防萬一
             if (messageType==null || messageType.equals("text")) {
                 doDecryptTextMessage(this);
             }else if (messageType.equals("audio")){
@@ -340,6 +353,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     //將語音訊息解密'
     private void doDecryptAudioMessage(ViewHolder holder){
         String msgWaiting = App.getContext().getResources().getString(R.string.msgDecryptingMessage);
+        //String msgWaiting = "";
         holder.messageTextView.setText(msgWaiting);
         Log.d("SecureChat", "Try to decrypt audio message, position=" + holder.positionOfMessageList + ", audio file URL: " + holder.originalMessage);
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(holder.originalMessage);
@@ -380,7 +394,23 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                         }else{
                             mCachedReceiver3DESKeyEncrypted = mCurrentViewHolder.encryptedSecretKeyForReceiver;
                         }
+
+                        mCurrentViewHolder.messageTextView.setText("");
+                        if (!mCurrentViewHolder.isSentMessage){    //如果是 Sent message 就不更新 DB，因為若 receiver 設定 burn after reading 把 message delete 了，然後 sender 又去更新 DB，這樣 DB 會有一筆資料只有 decryptedBySender，會造成 APP 當掉
+                            updateDecryptStatusFromDb(mCurrentViewHolder.isSentMessage, mCurrentViewHolder.dbKey);
+                        }
+                        mCurrentViewHolder.bDecrypted = true;
+                        mMessagesList.get(mCurrentViewHolder.positionOfMessageList).setMessage("");  //如果不這樣做的話，用戶滑動畫面後此訊息會顯示成未解密內容
+                        mMessagesList.get(mCurrentViewHolder.positionOfMessageList).setDecryptedByChatRoom(true);
+                        if (mCurrentViewHolder.isSentMessage) {
+                            mMessagesList.get(mCurrentViewHolder.positionOfMessageList).setDecryptedBySender(true);
+                        }else{
+                            mMessagesList.get(mCurrentViewHolder.positionOfMessageList).setDecryptedByReceiver(true);
+                        }
+
                         //資料解密成功，在畫面的訊息內容方塊顯示播放圖形
+                        mCurrentViewHolder.localAudioFileUri = decryptedFile.getAbsolutePath();
+                        changeViewHolderToAudioPlayer();
                     }else{
                         Log.d("SecureChat", "3DES decrypt message failed.");
                         Utility.showMessage(mContext, mContext.getString(R.string.msgFailedToDecryptMessage));
@@ -432,6 +462,46 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             Utility.showMessage(mContext, mContext.getString(R.string.msgUnableToRevert3DESSecretKey));
             return null;
         }
+
+    }
+
+    private void changeViewHolderToAudioPlayer(){
+        String myAudioUri = mCurrentViewHolder.localAudioFileUri;
+        if (myAudioUri==null || myAudioUri.length()<1) return;
+        if (mCurrentViewHolder.isSentMessage) {
+            mCurrentViewHolder.messageTextView.setBackgroundResource(R.drawable.audio_animation_right_list);
+        }else{
+            mCurrentViewHolder.messageTextView.setBackgroundResource(R.drawable.audio_animation_left_list);
+        }
+        AudioPlayManager.getInstance().stopPlay();
+        AudioPlayManager.getInstance().startPlay(mContext, Uri.parse(myAudioUri), new IAudioPlayListener() {
+            @Override
+            public void onStart(Uri var1) {
+                if (mCurrentViewHolder.messageTextView.getBackground() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mCurrentViewHolder.messageTextView.getBackground();
+                    animation.start();
+                }
+            }
+
+            @Override
+            public void onStop(Uri var1) {
+                if (mCurrentViewHolder.messageTextView.getBackground() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mCurrentViewHolder.messageTextView.getBackground();
+                    animation.stop();
+                    animation.selectDrawable(0);
+                }
+
+            }
+
+            @Override
+            public void onComplete(Uri var1) {
+                if (mCurrentViewHolder.messageTextView.getBackground() instanceof AnimationDrawable) {
+                    AnimationDrawable animation = (AnimationDrawable) mCurrentViewHolder.messageTextView.getBackground();
+                    animation.stop();
+                    animation.selectDrawable(0);
+                }
+            }
+        });
 
     }
 }

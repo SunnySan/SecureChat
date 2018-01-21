@@ -29,6 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxWidth="200dp"
+            android:minWidth="100dp"
             android:padding="8dp"
             android:textColor="#ffffff"
             android:layout_marginRight="0dp"
