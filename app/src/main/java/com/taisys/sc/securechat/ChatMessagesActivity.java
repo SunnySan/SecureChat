@@ -477,6 +477,23 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
     //如果用戶有設定 burnAfterReading = true 的話，將已讀的訊息刪除
     private void doBurnAfterReading(){
+        //把已經解密的 audio 檔案殺掉 (不論是 sent 或是 received 的 audio 都殺)
+        /*
+        File[] files = mAudioDir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().startsWith("decrypt_");
+            }
+        });
+        */
+
+        File[] files = mAudioDir.listFiles();   //原始檔、加密檔、解密檔全都殺
+
+        if (files!=null && files.length>0){
+            for (File file:files){
+                if (file.exists()) file.delete();
+            }
+        }
+
         if (!burnAfterReading) return;
         if (mMessagesList.isEmpty() || mMessagesList.size()<1) return;
         Log.d("SecureChat", "Do burn after reading");
@@ -492,6 +509,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                 mMessagesDBRef.child(msg.getDbKey()).removeValue();
             }
         }
+
         disWaiting();
     }
     /************************************************************************************************/
@@ -783,7 +801,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
         File encryptedFile = null;
         try{
             originalFile = new File(mAudioUri.getPath());
+            //Log.d("SecureChat", "original file= " + originalFile.getAbsolutePath() + ", key= " + Utility.byte2Hex(m3DESSecretKey));
             encryptedFile = Utility.encryptFile(m3DESSecretKey, originalFile);
+            //Log.d("SecureChat", "encryptedFile= " + (encryptedFile==null?"null":encryptedFile.getAbsolutePath()));
             uploadAudioToFirebaseStorage(encryptedFile);
         }catch (Exception e){
             if (encryptedFile!=null && encryptedFile.exists()) encryptedFile.delete();

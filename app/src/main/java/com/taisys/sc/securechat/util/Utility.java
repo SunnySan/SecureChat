@@ -298,6 +298,7 @@ public class Utility {
         CipherOutputStream cos = null;
         try {
             File encryptFile = new File(originalFile.getParentFile().getAbsolutePath() + "/encrypt_" + originalFile.getName());
+            //Log.d("SecureChat", "utility encryptFile= " + encryptFile.getAbsolutePath());
 
             in = new FileInputStream(originalFile);
             out = new FileOutputStream(encryptFile);
@@ -309,6 +310,7 @@ public class Utility {
             // Create and initialize the encryption engine
             Cipher cipher = Cipher.getInstance(AlgorithmForFile);
             cipher.init(Cipher.ENCRYPT_MODE, deskey, iv);
+            //Log.d("SecureChat", "before doFinal");
 
             // Create a special output stream to do the work for us
             cos = new CipherOutputStream(out, cipher);
@@ -321,19 +323,27 @@ public class Utility {
             }
             cos.flush();
             cos.close();
+            //Log.d("SecureChat", "after doFinal");
 
 
             // For extra security, don't leave any plaintext hanging around memory.
             java.util.Arrays.fill(buffer, (byte) 0);
+            cos = null;
+            //Log.d("SecureChat", "return encryptFile");
 
             return encryptFile;
         }catch (Exception e){
             e.printStackTrace();
             return null;
         }finally{
-            if(in!=null)in.close();
-            if(out!=null)out.close();
-            if(cos!=null)cos.close();
+            try {
+                //Log.d("SecureChat", "return encryptFile finally");
+                if(in!=null)in.close();
+                if(out!=null)out.close();
+                if(cos!=null)cos.close();
+            }catch (Exception e){
+                Log.d("SecureChat", "return encryptFile finally exception: " + e.toString());
+            }
         }
     }
 
@@ -350,6 +360,7 @@ public class Utility {
         try
         {
             File decryptFile = new File(encryptFile.getParentFile().getAbsolutePath()+"/decrypt_"+encryptFile.getName());
+            Log.d("SecureChat", "utility decryptFile= " + decryptFile.getAbsolutePath());
 
             in = new FileInputStream(encryptFile);
             out = new FileOutputStream(decryptFile);
@@ -369,9 +380,11 @@ public class Utility {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(cipher.update(buffer, 0, bytesRead));
             }
-
+            Log.d("SecureChat", "before doFinal");
             // Write out the final bunch of decrypted bytes
             out.write(cipher.doFinal());
+            Log.d("SecureChat", "after doFinal");
+
             out.flush();
 
             return decryptFile;

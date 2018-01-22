@@ -208,9 +208,15 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         holder.encryptedSecretKeyForReceiver = msg.getSecretKeyForReceiver();
         holder.positionOfMessageList = position;
 
-        if (!mMessagesList.get(position).getDecryptedByChatRoom()) {
+        if (!mMessagesList.get(position).getDecryptedByChatRoom()) {    //尚未解密
             holder.originalMessage = msg.getMessage();
-            holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptMessage));   //顯示 "點我解密"
+
+            if (msg.getMessageType()!=null && msg.getMessageType().equals("audio")) {
+                holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptAudio));   //顯示 "點我解密"            }else{
+            }else{
+                //Log.d("SecureChat", "setText(msg.getMessage())");
+                holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptMessage));   //顯示 "點我解密"
+            }
             changeViewHolderToText(holder);
         }else{  //已經解過密了
             if (msg.getMessageType()!=null && msg.getMessageType().equals("audio")) {
