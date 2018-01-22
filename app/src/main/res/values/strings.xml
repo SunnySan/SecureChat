@@ -70,5 +70,6 @@
     <string name="msgFailedToFindAudioFile">Failed to find audio file</string>
     <string name="msgFailedToDownloadAudioFile">Failed to download audio file</string>
     <string name="msgFailedToDecryptAudioFile">Failed to decrypt audio file</string>
+    <string name="msgClickMeToDecryptAudio">Click me to decrypt audio</string>
 
 </resources>

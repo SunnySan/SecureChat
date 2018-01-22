@@ -18,6 +18,7 @@ public class ChatMessage {
     private boolean decryptedByChatRoom;    //在 chat room 裡面是否已被解密
     private String secretKeyForSender;      //被 Sender public key 加密過的 3DES key
     private String secretKeyForReceiver;    //被 Receiver public key 加密過的 3DES key
+    private String localAudioFileUri;   //解密後的 audio 檔案的完整路徑
 
     public ChatMessage() {
     }
@@ -36,6 +37,7 @@ public class ChatMessage {
         this.decryptedByChatRoom = false;
         this.secretKeyForSender = secretKeyForSender;
         this.secretKeyForReceiver = secretKeyForReceiver;
+        this.localAudioFileUri = "";
     }
 
     public String getMessageType() {
@@ -122,5 +124,12 @@ public class ChatMessage {
     }
 
     public void setSecretKeyForReceiver(String secretKeyForReceiver) {this.secretKeyForReceiver = secretKeyForReceiver;}
+
+    public String getLocalAudioFileUri() {
+        return localAudioFileUri;
+    }
+
+    public void setLocalAudioFileUri(String localAudioFileUri) {this.localAudioFileUri = localAudioFileUri;}
+
 
 }

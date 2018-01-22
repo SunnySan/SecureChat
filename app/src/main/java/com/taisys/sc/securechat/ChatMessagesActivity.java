@@ -273,6 +273,8 @@ public class ChatMessagesActivity extends AppCompatActivity {
     }
 
     private void querymessagesBetweenThisUserAndClickedUser(){
+        /**populate messages**/
+        populateMessagesRecyclerView();
 
         //mMessagesDBRef.addValueEventListener(new ValueEventListener() {
         mMessagesDBRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -294,8 +296,6 @@ public class ChatMessagesActivity extends AppCompatActivity {
                                 }
                                 */
 
-                /**populate messages**/
-                populateMessagesRecyclerView();
 
             }
 
@@ -441,9 +441,11 @@ public class ChatMessagesActivity extends AppCompatActivity {
         //用 receiver 的 public key 加密 3DES key
         str3DESKey = Utility.paddingString(str3DESKey, 128);    //進行 padding
         //Log.d("SecureChat", "str3DESKey padding= " + str3DESKey);
+
         res = mCard.RSAPubKeyCalc(str3DESKey, 0x0202);
         if (res != null && res[0].equals(Card.RES_OK)) {
             Log.d("SecureChat", "SIM card encrypt receiver public key successfully");
+            //Log.d("SecureChat", "SIM card encrypted receiver public key= " + res[1]);
             mReceiverPublicKey = res[1];    //將 receiver public key 換成加密過的 3DES key
         }else{
             m3DESSecretKey = null;
@@ -452,6 +454,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForReceiver) + "error: " + res[0]);
             return;
         }
+
 
         //用自己的 public key 加密 3DES key
         res = mCard.RSAPubKeyCalc(str3DESKey, 0x0201);
@@ -465,6 +468,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForSender) + "error: " + res[0]);
             return;
         }
+
         disWaiting();
         m3DESSecretKey = bytes3DESKey;
         /**Query and populate chat messages**/
