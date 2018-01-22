@@ -23,6 +23,8 @@ import com.taisys.sc.securechat.util.Utility;
 import kr.co.namee.permissiongen.PermissionGen;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
+
     private Card mCard = new Card();
     private ProgressDialog pg = null;
     private Context myContext = null;
@@ -191,11 +193,11 @@ public class MainActivity extends AppCompatActivity {
         }
         disWaiting();
         if (res != null && res.equals(Card.RES_OK)) {
-            Log.d("SecureChat", "PIN verification passed");
+            Log.d(TAG, "PIN verification passed");
             //登入firebase看看是否成功，若成功表示此SIM卡已註冊過firebase帳號，若失敗則讓用戶註冊firebase帳號
             loginFirebase();
         } else {
-            Log.d("SecureChat", "PIN code compared failed, user enter PIN= " + pinCode);
+            Log.d(TAG, "PIN code compared failed, user enter PIN= " + pinCode);
             Utility.showMessage(myContext, getString(R.string.msgPinCodeIsIncorrect));
         }
     }
@@ -229,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cleanDataAndExitApp(){
-        Log.d("SecureChat", "About to leave APP...");
+        Log.d(TAG, "About to leave APP...");
         if (mCard!=null){
             mCard.CloseSEService();
         }

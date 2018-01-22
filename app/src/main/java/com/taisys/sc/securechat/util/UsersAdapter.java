@@ -22,6 +22,8 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> {
+    private static final String TAG = "SecureChat";
+
     private List<User> mUsersList;
     private Context mContext;
     private String myPublicKey = "";    //目前這個 SIM 卡的 public key

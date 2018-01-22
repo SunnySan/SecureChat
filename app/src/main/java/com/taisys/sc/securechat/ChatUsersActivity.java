@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChatUsersActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
 
     private FirebaseAuth mAuth;
     private DatabaseReference mUsersDBRef;
@@ -63,18 +64,18 @@ public class ChatUsersActivity extends AppCompatActivity {
         mUsersDBRef.orderByChild("displayName").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("SecureChat", "onDataChange");
+                Log.d(TAG, "onDataChange");
                 mUsersList.clear();
                 if(dataSnapshot.getChildrenCount() > 0){
-                    //Log.d("SecureChat", "getChildrenCount>0");
+                    //Log.d(TAG, "getChildrenCount>0");
                     for(DataSnapshot snap: dataSnapshot.getChildren()){
                         User user = snap.getValue(User.class);
-                        //Log.d("SecureChat", "user: " + user.getDisplayName() + ", public key=" + user.getPublicKey());
+                        //Log.d(TAG, "user: " + user.getDisplayName() + ", public key=" + user.getPublicKey());
                         //if not current user, as we do not want to show ourselves then chat with ourselves lol
                         try {
                             if(!user.getUserId().equals(mAuth.getCurrentUser().getUid())){
                                 if (!mUsersList.contains(user)){
-                                    //Log.d("SecureChat", "Add user");
+                                    //Log.d(TAG, "Add user");
                                     if (user.getPublicKey()!=null && user.getPublicKey().length()>0){
                                         mUsersList.add(user);
                                     }
@@ -158,17 +159,17 @@ public class ChatUsersActivity extends AppCompatActivity {
     }
 
     private void goToUpdateUserProfile(){
-        //Log.d("SecureChat", "goToUpdateUserProfile");
+        //Log.d(TAG, "goToUpdateUserProfile");
         startActivity(new Intent(this, UpdateProfileActivity.class));
     }
 
     private void goToChangePinCode(){
-        //Log.d("SecureChat", "goToChangePinCode");
+        //Log.d(TAG, "goToChangePinCode");
         startActivity(new Intent(this, ChangePinCodeActivity.class));
     }
 
     private void logOutuser(){
-        //Log.d("SecureChat", "goToLogout");
+        //Log.d(TAG, "goToLogout");
         FirebaseAuth.getInstance().signOut();
         goToHome();
         //now send user back to login screen

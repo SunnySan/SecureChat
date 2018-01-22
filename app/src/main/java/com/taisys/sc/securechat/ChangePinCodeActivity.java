@@ -13,6 +13,7 @@ import com.taisys.oti.Card;
 import com.taisys.sc.securechat.util.Utility;
 
 public class ChangePinCodeActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
 
     private Card mCard = new Card();
     private ProgressDialog pg = null;
@@ -106,7 +107,7 @@ public class ChangePinCodeActivity extends AppCompatActivity {
         //顯示Progress對話視窗
         //utility.showToast(myContext, getString(R.string.msgReadCardInfo));
         //showWaiting(getString(R.string.pleaseWait), getString(R.string.msgReadCardInfo));
-        Log.d("SecureChat", "Get Card Info");
+        Log.d(TAG, "Get Card Info");
         String res[] = mCard.GetCardInfo();
         //disWaiting();
         if (res != null && res[0].equals(Card.RES_OK)) {
@@ -119,7 +120,7 @@ public class ChangePinCodeActivity extends AppCompatActivity {
     }
 
     private void changePinCode(){
-        Log.d("SecureChat", "Change PIN code");
+        Log.d(TAG, "Change PIN code");
         EditText editTextPinCode = (EditText) findViewById(R.id.editTextChangePinCodeCurrentPinCode);
         String oldPinCode = editTextPinCode.getText().toString();
         if (oldPinCode.length()==0){
@@ -164,10 +165,10 @@ public class ChangePinCodeActivity extends AppCompatActivity {
             mCard.CloseSEService();
         }
         if (res != null && res.equals(Card.RES_OK)) {
-            Log.d("SecureChat", "Change PIN code successfully.");
+            Log.d(TAG, "Change PIN code successfully.");
             Utility.showMessage(myContext, getString(R.string.msgSuccess));
         } else {
-            Log.d("SecureChat", "PIN code compared failed, user enter PIN= " + newPinCode + ", response= " + res);
+            Log.d(TAG, "PIN code compared failed, user enter PIN= " + newPinCode + ", response= " + res);
             //utility.showMessage(myContext, pinCode);
             Utility.showMessage(myContext, getString(R.string.msgProcessFailed));
         }

@@ -6,8 +6,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -36,12 +38,17 @@ import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.Utility;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UpdateProfileActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_PICK = 2;
@@ -174,10 +181,6 @@ public class UpdateProfileActivity extends AppCompatActivity {
         populateTheViews();
     }
 
-    private void closeActivity(){
-        finish();
-    }
-
     private void showWaiting(final String title, final String msg) {
         disWaiting();
         runOnUiThread(new Runnable() {
@@ -216,6 +219,7 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     String userName = currentuser.getDisplayName();
 
                     Picasso.with(UpdateProfileActivity.this).load(userPhoto).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
+
                     mUserNameEdit.setText(userName);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -274,15 +278,15 @@ public class UpdateProfileActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        //Log.d("SecureChat", "requestCode= " + String.valueOf(requestCode));
-        //Log.d("SecureChat", "resultCode= " + String.valueOf(resultCode));
-        //Log.d("SecureChat", "data= " + data.toString());
+        //Log.d(TAG, "requestCode= " + String.valueOf(requestCode));
+        //Log.d(TAG, "resultCode= " + String.valueOf(resultCode));
+        //Log.d(TAG, "data= " + data.toString());
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Log.d("SecureChat", "camera image ok");
+            Log.d(TAG, "camera image ok");
             Bundle extras = data.getExtras();
             imageBitmap = (Bitmap) extras.get("data");
             //imageBitmap = data.getExtras().getParcelable("data");
-            Log.d("SecureChat", "camera image ok, imageBitmap= " + imageBitmap.toString());
+            Log.d(TAG, "camera image ok, imageBitmap= " + imageBitmap.toString());
             Bitmap resized = Bitmap.createScaledBitmap(imageBitmap, 100, 100, true);
             mUserPhotoImageView.setImageBitmap(resized);
             mUserPhotoImageView.invalidate();
@@ -297,19 +301,34 @@ public class UpdateProfileActivity extends AppCompatActivity {
                 InputStream inputStream = this.getContentResolver().openInputStream(data.getData());
                 imageBitmap = BitmapFactory.decodeStream(inputStream);
             }catch (FileNotFoundException e){
-                Log.d("SecureChat", "Failed to get image stream");
+                Log.d(TAG, "Failed to get image stream");
                 Utility.showMessage(myContext, getString(R.string.msgFailedToGetYourImage));
+                return;
             }
-            //Log.d("SecureChat", "pick image ok, imageBitmap= " + imageBitmap.toString());
+            //Log.d(TAG, "pick image ok, imageBitmap= " + imageBitmap.toString());
             //Uri selectedImage = data.getData();
             //mUserPhotoImageView.setImageURI(selectedImage);
-            mUserPhotoImageView.setImageBitmap(imageBitmap);
-            Log.d("SecureChat", "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()));
+            //mUserPhotoImageView.setImageBitmap(null);
+            try {
+                File filePhotoDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/SecureChat/");
+                if (!filePhotoDir.exists()) filePhotoDir.mkdirs();
+                File myPhoto = new File(filePhotoDir.getAbsolutePath() + "/myphoto.jpg");
+                OutputStream os = new FileOutputStream(myPhoto);
+                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
+                os.close();
+                os = null;
+                Picasso.with(UpdateProfileActivity.this).load(myPhoto).into(mUserPhotoImageView);
 
-            /**convert bitmap to byte array to store in firebase storage**/
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byteArray = stream.toByteArray();
+                //mUserPhotoImageView.setImageBitmap(imageBitmap);
+                //mUserPhotoImageView.invalidate();
+                Log.d(TAG, "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()) + ", X=" + String.valueOf(imageBitmap.getWidth()));
+
+                /**convert bitmap to byte array to store in firebase storage**/
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byteArray = stream.toByteArray();
+            }catch (Exception e){
+            }
         }
     }
 

@@ -46,6 +46,8 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     public static final int ITEM_TYPE_SENT = 0;
     public static final int ITEM_TYPE_RECEIVED = 1;
 
+    private static final String TAG = "SecureChat";
+
     private List<ChatMessage> mMessagesList;
     private Context mContext;
 
@@ -181,11 +183,11 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         ChatMessage msg = mMessagesList.get(position);
-        Log.d("SecureChat", "onBindViewHolder, position= " + position + ", decrypted=" + mMessagesList.get(position).getDecryptedByChatRoom() + ", message= " + msg.getMessage() + ", messageType= " + msg.getMessageType());
+        Log.d(TAG, "onBindViewHolder, position= " + position + ", decrypted=" + mMessagesList.get(position).getDecryptedByChatRoom() + ", message= " + msg.getMessage() + ", messageType= " + msg.getMessageType());
 
         if (holder.imageImageView!=null) {
             //顯示大頭貼
-            //Log.d("SecureChat", "msg.getSenderImage()= " + msg.getSenderImage());
+            //Log.d(TAG, "msg.getSenderImage()= " + msg.getSenderImage());
             if (msg.getSenderImage() != null && msg.getSenderImage().length() > 0) {
                 Picasso.with(mContext)
                         .load(msg.getSenderImage())
@@ -214,16 +216,16 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             if (msg.getMessageType()!=null && msg.getMessageType().equals("audio")) {
                 holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptAudio));   //顯示 "點我解密"            }else{
             }else{
-                //Log.d("SecureChat", "setText(msg.getMessage())");
+                //Log.d(TAG, "setText(msg.getMessage())");
                 holder.messageTextView.setText(App.getContext().getResources().getString(R.string.msgClickMeToDecryptMessage));   //顯示 "點我解密"
             }
             changeViewHolderToText(holder);
         }else{  //已經解過密了
             if (msg.getMessageType()!=null && msg.getMessageType().equals("audio")) {
-                Log.d("SecureChat", "changeViewHolderToAudioPlayer");
+                Log.d(TAG, "changeViewHolderToAudioPlayer");
                 changeViewHolderToAudioPlayer(holder);
             }else{
-                Log.d("SecureChat", "setText(msg.getMessage())");
+                Log.d(TAG, "setText(msg.getMessage())");
                 holder.messageTextView.setText(msg.getMessage());   //顯示解密過的訊息(這是用戶滑動螢幕時，此訊息跑到foreground，然後呼叫 onBindViewHolder)
                 changeViewHolderToText(holder);
             }
@@ -263,7 +265,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
 
             mMessagesDBRef.updateChildren(statusUpdates);
         }catch (Exception e){
-            Log.d("SecureChat", "Failed to update message decrypted staus from DB: " + e.toString());
+            Log.d(TAG, "Failed to update message decrypted staus from DB: " + e.toString());
         }
     }
 
@@ -271,13 +273,13 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
     private void doDecryptTextMessage(ViewHolder holder){
         String msgWaiting = App.getContext().getResources().getString(R.string.msgDecryptingMessage);
         holder.messageTextView.setText(msgWaiting);
-        Log.d("SecureChat", "Try to decrypt text message, position=" + holder.positionOfMessageList + ", message: " + holder.originalMessage);
+        Log.d(TAG, "Try to decrypt text message, position=" + holder.positionOfMessageList + ", message: " + holder.originalMessage);
         //如果 nameTextView==null，則這個是 Sent 的訊息，若nameTextView!=null，則這個是 Received 的訊息
         String decryptedMessage = "";
         if (holder.isSentMessage){
-            Log.d("SecureChat", "this is a sent message");
+            Log.d(TAG, "this is a sent message");
             if (holder.encryptedSecretKeyForSender.equals(mCachedSender3DESKeyEncrypted)) {
-                //Log.d("SecureChat", "Decrypt message with cached session key");
+                //Log.d(TAG, "Decrypt message with cached session key");
                 //用上次存起來的 3DES key，省掉用 SIM 卡 private key 解密的作業時間
                 decryptedMessage = Utility.decryptString(Utility.hex2Byte(mCachedSender3DESKey), holder.originalMessage);
             }else{
@@ -285,7 +287,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
             }
         }else{
             if (holder.encryptedSecretKeyForReceiver.equals(mCachedReceiver3DESKeyEncrypted)) {
-                //Log.d("SecureChat", "Decrypt message with cached session key");
+                //Log.d(TAG, "Decrypt message with cached session key");
                 //用上次存起來的 3DES key，省掉用 SIM 卡 private key 解密的作業時間
                 decryptedMessage = Utility.decryptString(Utility.hex2Byte(mCachedReceiver3DESKey), holder.originalMessage);
             }else{
@@ -323,23 +325,23 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         res = mCard.RSAPriKeyCalc(encryptedSecretKey, true, 0x0301);
         begintime = System.currentTimeMillis() - begintime;
         if (res != null && res[0].equals(Card.RES_OK)) {
-            //Log.d("SecureChat", "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
+            //Log.d(TAG, "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
             original3DESKey = hex2Byte(res[1]); //取得加密此訊息的 3DES key
-            //Log.d("SecureChat", "original3DESKey byte[]= " + original3DESKey.toString());
+            //Log.d(TAG, "original3DESKey byte[]= " + original3DESKey.toString());
             //i = Utility.getPlainTextLength(original3DESKey);    //實際 3DES key 的長度(應為24)
             s = Utility.byte2Hex(original3DESKey);
-            //Log.d("SecureChat", "original3DESKey full s= " + s);
+            //Log.d(TAG, "original3DESKey full s= " + s);
             s = s.substring(s.length()-48); //只取後48個數字，即24 bytes
             if (isSentMessage) {
                 mCachedSender3DESKey =  s;
             }else{
                 mCachedReceiver3DESKey =  s;
             }
-            //Log.d("SecureChat", "original3DESKey truncated s= " + s);
+            //Log.d(TAG, "original3DESKey truncated s= " + s);
             original3DESKey = Utility.hex2Byte(s);
             s = Utility.decryptString(original3DESKey, encryptedMessage);
             if (s!=null && s.length()>0) {
-                Log.d("SecureChat", "3DES decrypt message successfully.");
+                Log.d(TAG, "3DES decrypt message successfully.");
                 if (isSentMessage) {
                     mCachedSender3DESKeyEncrypted = encryptedSecretKey;
                 }else{
@@ -347,12 +349,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                 }
                 return s;
             }else{
-                Log.d("SecureChat", "3DES decrypt message failed.");
+                Log.d(TAG, "3DES decrypt message failed.");
                 Utility.showMessage(mContext, mContext.getString(R.string.msgFailedToDecryptMessage));
                 return "";
             }
         } else {
-            Log.d("SecureChat", "decrypt RSA encrypted 3DES key failed, time:" + begintime + "ms, error code=" + res[0]);
+            Log.d(TAG, "decrypt RSA encrypted 3DES key failed, time:" + begintime + "ms, error code=" + res[0]);
             Utility.showMessage(mContext, mContext.getString(R.string.msgUnableToRevert3DESSecretKey));
             return "";
         }
@@ -365,7 +367,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         String msgWaiting = App.getContext().getResources().getString(R.string.msgDecryptingMessage);
         //String msgWaiting = "";
         holder.messageTextView.setText(msgWaiting);
-        Log.d("SecureChat", "Try to decrypt audio message, position=" + holder.positionOfMessageList + ", audio file URL: " + holder.originalMessage);
+        Log.d(TAG, "Try to decrypt audio message, position=" + holder.positionOfMessageList + ", audio file URL: " + holder.originalMessage);
         StorageReference httpsReference = FirebaseStorage.getInstance().getReferenceFromUrl(holder.originalMessage);
         mAudioFilePath = mAudioDir.getAbsolutePath() + "/" + holder.dbKey;    //存放檔案的 local path + file name
         File localFile = new File(mAudioFilePath);
@@ -378,9 +380,9 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                 byte[] original3DESKey = null;
                 try {
                     if (myHolder.isSentMessage){
-                        Log.d("SecureChat", "this is a sent message");
+                        Log.d(TAG, "this is a sent message");
                         if (myHolder.encryptedSecretKeyForSender.equals(mCachedSender3DESKeyEncrypted)) {
-                            //Log.d("SecureChat", "Decrypt message with cached session key");
+                            //Log.d(TAG, "Decrypt message with cached session key");
                             //用上次存起來的 3DES key，省掉用 SIM 卡 private key 解密的作業時間
                             original3DESKey = Utility.hex2Byte(mCachedSender3DESKey);
                         }else{
@@ -388,7 +390,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                         }
                     }else{
                         if (myHolder.encryptedSecretKeyForReceiver.equals(mCachedReceiver3DESKeyEncrypted)) {
-                            //Log.d("SecureChat", "Decrypt message with cached session key");
+                            //Log.d(TAG, "Decrypt message with cached session key");
                             //用上次存起來的 3DES key，省掉用 SIM 卡 private key 解密的作業時間
                             original3DESKey = Utility.hex2Byte(mCachedReceiver3DESKey);
                         }else{
@@ -398,7 +400,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                     if (original3DESKey == null) return;
                     decryptedFile = Utility.decryptFile(original3DESKey, localFile);
                     if (decryptedFile.exists() && decryptedFile.length()>0) {
-                        Log.d("SecureChat", "3DES decrypt audio message successfully.");
+                        Log.d(TAG, "3DES decrypt audio message successfully.");
                         if (myHolder.isSentMessage) {
                             mCachedSender3DESKeyEncrypted = myHolder.encryptedSecretKeyForSender;
                         }else{
@@ -421,12 +423,12 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
                         mMessagesList.get(myHolder.positionOfMessageList).setLocalAudioFileUri(decryptedFile.getAbsolutePath());
                         changeViewHolderToAudioPlayer(myHolder);
                     }else{
-                        Log.d("SecureChat", "3DES decrypt message failed.");
+                        Log.d(TAG, "3DES decrypt message failed.");
                         Utility.showMessage(mContext, mContext.getString(R.string.msgFailedToDecryptMessage));
                     }
 
                 }catch (Exception e){
-                    Log.e("SecureChat", "Fail to decrypt file: " + e.toString());
+                    Log.e(TAG, "Fail to decrypt file: " + e.toString());
                     Utility.showMessage(mContext, App.getContext().getResources().getString(R.string.msgFailedToDecryptAudioFile));
                 }
             }
@@ -451,23 +453,23 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         res = mCard.RSAPriKeyCalc(encryptedSecretKey, true, 0x0301);
         begintime = System.currentTimeMillis() - begintime;
         if (res != null && res[0].equals(Card.RES_OK)) {
-            //Log.d("SecureChat", "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
+            //Log.d(TAG, "decrypt RSA encrypted 3DES key successfully, time:" + begintime + "ms");
             original3DESKey = hex2Byte(res[1]); //取得加密此訊息的 3DES key
-            //Log.d("SecureChat", "original3DESKey byte[]= " + original3DESKey.toString());
+            //Log.d(TAG, "original3DESKey byte[]= " + original3DESKey.toString());
             //i = Utility.getPlainTextLength(original3DESKey);    //實際 3DES key 的長度(應為24)
             s = Utility.byte2Hex(original3DESKey);
-            //Log.d("SecureChat", "original3DESKey full s= " + s);
+            //Log.d(TAG, "original3DESKey full s= " + s);
             s = s.substring(s.length()-48); //只取後48個數字，即24 bytes
             if (isSentMessage) {
                 mCachedSender3DESKey =  s;
             }else{
                 mCachedReceiver3DESKey =  s;
             }
-            //Log.d("SecureChat", "original3DESKey truncated s= " + s);
+            //Log.d(TAG, "original3DESKey truncated s= " + s);
             original3DESKey = Utility.hex2Byte(s);
             return original3DESKey;
         } else {
-            Log.d("SecureChat", "decrypt RSA encrypted 3DES key failed, time:" + begintime + "ms, error code=" + res[0]);
+            Log.d(TAG, "decrypt RSA encrypted 3DES key failed, time:" + begintime + "ms, error code=" + res[0]);
             Utility.showMessage(mContext, mContext.getString(R.string.msgUnableToRevert3DESSecretKey));
             return null;
         }
@@ -476,14 +478,14 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
 
     private void changeViewHolderToAudioPlayer(ViewHolder holder){
         String myAudioUri = mMessagesList.get(holder.positionOfMessageList).getLocalAudioFileUri();
-        Log.d("SecureChat", "inside changeViewHolderToAudioPlayer, position= " + holder.positionOfMessageList + ", myAudioUri=" + myAudioUri);
+        Log.d(TAG, "inside changeViewHolderToAudioPlayer, position= " + holder.positionOfMessageList + ", myAudioUri=" + myAudioUri);
         if (myAudioUri==null || myAudioUri.length()<1) return;
         holder.messageTextView.setText("");
         if (holder.isSentMessage) {
-            Log.d("SecureChat", "set background to right, position= " + holder.positionOfMessageList);
+            Log.d(TAG, "set background to right, position= " + holder.positionOfMessageList);
             holder.messageTextView.setBackgroundResource(R.drawable.audio_animation_right_list);
         }else{
-            Log.d("SecureChat", "set background to left, position= " + holder.positionOfMessageList);
+            Log.d(TAG, "set background to left, position= " + holder.positionOfMessageList);
             holder.messageTextView.setBackgroundResource(R.drawable.audio_animation_left_list);
         }
     }

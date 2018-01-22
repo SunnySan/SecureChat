@@ -38,6 +38,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 
 public class Utility {
+    private static final String TAG = "SecureChat";
     public static String getMySetting(Context context, String keyName){
         // 建立SharedPreferences物件
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -138,7 +139,7 @@ public class Utility {
         if (bytes == null || bytes.length == 0) return 0;
         int i = 0;
         for (i=0;i<bytes.length;i++){
-            //Log.d("SecureChat", "i=" + String.valueOf(i) + ", data=" + bytes[i]);
+            //Log.d(TAG, "i=" + String.valueOf(i) + ", data=" + bytes[i]);
             if (bytes[i] == 70) break;
         }
         return i;
@@ -164,7 +165,7 @@ public class Utility {
             return cipher.doFinal(data);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d("SecureChat", "RSA failed: " + e.toString());
+            Log.d(TAG, "RSA failed: " + e.toString());
         }
         return null;
     }
@@ -175,7 +176,7 @@ public class Utility {
             KeyGenerator keyGen = KeyGenerator.getInstance("DESede");
             SecretKey key = keyGen.generateKey();
             byte[] b = key.getEncoded();
-            //Log.d("SecureChat", "generate 3DES key= " + byte2Hex(b));
+            //Log.d(TAG, "generate 3DES key= " + byte2Hex(b));
             return key.getEncoded();
         }catch (NoSuchAlgorithmException e){
             return null;
@@ -206,7 +207,7 @@ public class Utility {
         try {
             //src = paddingStringWithFF(byte2Hex(stringToBytesUTFCustom(src)), 8);
             src = paddingStringWithFF(byte2Hex(src.getBytes()), 8);
-            //Log.d("SecureChat", "3DES encrypt padding string: " + src);
+            //Log.d(TAG, "3DES encrypt padding string: " + src);
             byte[] byteEncrypted = encryptMode(keybyte, src.getBytes());    //加密
             if (byteEncrypted == null) return "";    //當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
             //String newString = bytesToStringUTFCustom(byteEncrypted);	//將 byte array 轉成一個個 char 的字串
@@ -229,11 +230,11 @@ public class Utility {
             if (byteDecrypted == null) return "";    //當加解密有誤時會回覆空字串，若原始字串有值，但加解密後變成空的，就需顯示錯誤訊息
             int i = getPlainTextLength(byteDecrypted);
             byte[] subArray = Arrays.copyOfRange(byteDecrypted, 0, i);
-            //Log.d("SecureChat", "3DES decrypted length=" + i + ", byte array: " + new String(byteDecrypted) + ", new array: " + new String(subArray));
+            //Log.d(TAG, "3DES decrypted length=" + i + ", byte array: " + new String(byteDecrypted) + ", new array: " + new String(subArray));
             String newString = new String(subArray);
             newString = new String(hex2Byte(newString));
             //String newString = bytesToStringUTFCustom(subArray);
-            //Log.d("SecureChat", "3DES decrypted string: " + newString);
+            //Log.d(TAG, "3DES decrypted string: " + newString);
             return newString;
         }catch (Exception e){
             return "";
@@ -298,7 +299,7 @@ public class Utility {
         CipherOutputStream cos = null;
         try {
             File encryptFile = new File(originalFile.getParentFile().getAbsolutePath() + "/encrypt_" + originalFile.getName());
-            //Log.d("SecureChat", "utility encryptFile= " + encryptFile.getAbsolutePath());
+            //Log.d(TAG, "utility encryptFile= " + encryptFile.getAbsolutePath());
 
             in = new FileInputStream(originalFile);
             out = new FileOutputStream(encryptFile);
@@ -310,7 +311,7 @@ public class Utility {
             // Create and initialize the encryption engine
             Cipher cipher = Cipher.getInstance(AlgorithmForFile);
             cipher.init(Cipher.ENCRYPT_MODE, deskey, iv);
-            //Log.d("SecureChat", "before doFinal");
+            //Log.d(TAG, "before doFinal");
 
             // Create a special output stream to do the work for us
             cos = new CipherOutputStream(out, cipher);
@@ -323,13 +324,13 @@ public class Utility {
             }
             cos.flush();
             cos.close();
-            //Log.d("SecureChat", "after doFinal");
+            //Log.d(TAG, "after doFinal");
 
 
             // For extra security, don't leave any plaintext hanging around memory.
             java.util.Arrays.fill(buffer, (byte) 0);
             cos = null;
-            //Log.d("SecureChat", "return encryptFile");
+            //Log.d(TAG, "return encryptFile");
 
             return encryptFile;
         }catch (Exception e){
@@ -337,12 +338,12 @@ public class Utility {
             return null;
         }finally{
             try {
-                //Log.d("SecureChat", "return encryptFile finally");
+                //Log.d(TAG, "return encryptFile finally");
                 if(in!=null)in.close();
                 if(out!=null)out.close();
                 if(cos!=null)cos.close();
             }catch (Exception e){
-                Log.d("SecureChat", "return encryptFile finally exception: " + e.toString());
+                Log.d(TAG, "return encryptFile finally exception: " + e.toString());
             }
         }
     }
@@ -360,7 +361,7 @@ public class Utility {
         try
         {
             File decryptFile = new File(encryptFile.getParentFile().getAbsolutePath()+"/decrypt_"+encryptFile.getName());
-            Log.d("SecureChat", "utility decryptFile= " + decryptFile.getAbsolutePath());
+            //Log.d(TAG, "utility decryptFile= " + decryptFile.getAbsolutePath());
 
             in = new FileInputStream(encryptFile);
             out = new FileOutputStream(decryptFile);
@@ -380,10 +381,10 @@ public class Utility {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(cipher.update(buffer, 0, bytesRead));
             }
-            Log.d("SecureChat", "before doFinal");
+            //Log.d(TAG, "before doFinal");
             // Write out the final bunch of decrypted bytes
             out.write(cipher.doFinal());
-            Log.d("SecureChat", "after doFinal");
+            //Log.d(TAG, "after doFinal");
 
             out.flush();
 

@@ -25,6 +25,8 @@ import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.Utility;
 
 public class SignUpActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
+
     private Card mCard = new Card();
     private ProgressDialog pg = null;
     private Context myContext = null;
@@ -207,9 +209,9 @@ public class SignUpActivity extends AppCompatActivity {
                 0x0301);
         begintime = System.currentTimeMillis() - begintime;
         if (resString != null && resString.equals(Card.RES_OK)) {
-            Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair OK!");
+            Log.d(TAG, "time:" + begintime + "ms, " + "Gen key pair OK!");
         } else {
-            Log.d("SecureChat", "time:" + begintime + "ms, " + "Gen key pair Failed!");
+            Log.d(TAG, "time:" + begintime + "ms, " + "Gen key pair Failed!");
             Utility.showMessage(myContext, getString(R.string.msgUnableToGenerateRsaKeyPair) + "error code=" + resString);
             disWaiting();
             return;
@@ -221,14 +223,14 @@ public class SignUpActivity extends AppCompatActivity {
         disWaiting();
         if (res != null && res[0].equals(Card.RES_OK)) {
             publicKey = res[1];
-            Log.d("SecureChat", "public key=" + publicKey);
+            Log.d(TAG, "public key=" + publicKey);
             String name = mNameSignUpEditText.getText().toString();
             String email = iccid + "@gmail.com";
             String password = "111111";
             signUpUserWithFirebase(name, email, password, publicKey);
         } else {
             Utility.showMessage(myContext, getString(R.string.msgFailToReadPublicKey) + "error code=" + res[0]);
-            Log.d("SecureChat", "no public key:" + res[0]);
+            Log.d(TAG, "no public key:" + res[0]);
             return;
         }
 
@@ -238,9 +240,9 @@ public class SignUpActivity extends AppCompatActivity {
                 .CreateFile(0x0202, (byte)0x02, 0x0, (byte)0x0, (byte)0x0, (byte)0x0);
         begintime = System.currentTimeMillis() - begintime;
         if (resString != null && resString.equals(Card.RES_OK)) {
-            Log.d("SecureChat", "Create File success！ time=" + begintime + "ms");
+            Log.d(TAG, "Create File success！ time=" + begintime + "ms");
         } else {
-            Log.d("SecureChat", "Create File failed！ error code=" + resString);
+            Log.d(TAG, "Create File failed！ error code=" + resString);
         }
 
         /*
@@ -248,10 +250,10 @@ public class SignUpActivity extends AppCompatActivity {
             if (res != null && res[0].equals(Card.RES_OK)) {
                 //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
                 publicKey = res[1];
-                Log.d("SecureChat", "public key=" + res[1]);
+                Log.d(TAG, "public key=" + res[1]);
             } else {
                 Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "no public key:" + res[0]);
+                Log.d(TAG, "no public key:" + res[0]);
             }
 
 
@@ -260,9 +262,9 @@ public class SignUpActivity extends AppCompatActivity {
                     .CreateFile(0x0202, (byte)0x02, 0x0, (byte)0x0, (byte)0x0, (byte)0x0);
             begintime = System.currentTimeMillis() - begintime;
             if (resString != null && resString.equals(Card.RES_OK)) {
-                Log.d("SecureChat", "Create File success！ time=" + begintime + "ms");
+                Log.d(TAG, "Create File success！ time=" + begintime + "ms");
             } else {
-                Log.d("SecureChat", "Create File failed！ error code=" + resString);
+                Log.d(TAG, "Create File failed！ error code=" + resString);
             }
 
 
@@ -278,19 +280,19 @@ public class SignUpActivity extends AppCompatActivity {
             resString = mCard.WriteFile(0x0202, 0, res[1]);
             begintime = System.currentTimeMillis() - begintime;
             if (resString != null && resString.equals(Card.RES_OK)) {
-                Log.d("SecureChat", "Write File success！ time=" + begintime + "ms");
+                Log.d(TAG, "Write File success！ time=" + begintime + "ms");
             } else {
-                Log.d("SecureChat", "Write File failed！ error code=" + resString);
+                Log.d(TAG, "Write File failed！ error code=" + resString);
             }
 
 
             res = mCard.ReadFile(0x0201, 4, 128);
             if (res != null && res[0].equals(Card.RES_OK)) {
                 //Toast.makeText(SignUpActivity.this, "public key=" + res[1], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "public key=" + res[1]);
+                Log.d(TAG, "public key=" + res[1]);
             } else {
                 Toast.makeText(SignUpActivity.this, "no public key:" + res[0], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "no public key:" + res[0]);
+                Log.d(TAG, "no public key:" + res[0]);
             }
 
             begintime = System.currentTimeMillis();
@@ -300,22 +302,22 @@ public class SignUpActivity extends AppCompatActivity {
             src = byte2Hex(srcBytes);
             //src = "7465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374746573747465737474657374";
             src = paddingString(src, 256);
-            Log.d("SecureChat", "src=" + src);
+            Log.d(TAG, "src=" + src);
             //Toast.makeText(SignUpActivity.this, "src=" + src, Toast.LENGTH_LONG).show();
             res = mCard.RSAPubKeyCalc(src, 0x0202);
             begintime = System.currentTimeMillis() - begintime;
 
             if (res != null && res[0].equals(Card.RES_OK)) {
                 //Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + res[1], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "SIM card encrypt data successfully, time:" + begintime + "ms, " + res[1]);
+                Log.d(TAG, "SIM card encrypt data successfully, time:" + begintime + "ms, " + res[1]);
                 mNameSignUpEditText.setText(res[1]);
 
 
                 byte[] encryptionBytes = doRSAEncryption(srcBytes, publicKey, "000000", "RSA/ECB/NoPadding", Cipher.ENCRYPT_MODE);
                 if (encryptionBytes!=null && encryptionBytes.length>0) {
-                    Log.d("SecureChat", "APP encrypt data successfully, bytes=:" + encryptionBytes);
+                    Log.d(TAG, "APP encrypt data successfully, bytes=:" + encryptionBytes);
                 }else{
-                    Log.d("SecureChat", "APP encrypt data failed");
+                    Log.d(TAG, "APP encrypt data failed");
                 }
 
 
@@ -324,21 +326,21 @@ public class SignUpActivity extends AppCompatActivity {
                 //res = mCard.RSAPriKeyCalc(byte2Hex(encryptionBytes), true, 0x0301);
                 begintime = System.currentTimeMillis() - begintime;
                 if (res != null && res[0].equals(Card.RES_OK)) {
-                    Log.d("SecureChat", "decrypt data successfully, time:" + begintime + "ms, " + res[1]);
+                    Log.d(TAG, "decrypt data successfully, time:" + begintime + "ms, " + res[1]);
                     mNameSignUpEditText.setText(res[1]);
                     src = bytesToStringUTFCustom(hex2Byte(res[1]));
                     src = src.substring(0, getPlainTextLength(hex2Byte(res[1]))/2);
-                    Log.d("SecureChat", "Source string=" + src);
+                    Log.d(TAG, "Source string=" + src);
                     mNameSignUpEditText.setText(src);
                 } else {
                     Toast.makeText(SignUpActivity.this, "decrypt data failed, time:" + begintime + "ms\n" + "Error code: "
                             + res[0], Toast.LENGTH_SHORT).show();
-                    Log.d("SecureChat", "decrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
+                    Log.d(TAG, "decrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
                 }
             } else {
                 Toast.makeText(SignUpActivity.this, "time:" + begintime + "ms\n" + "Error code: "
                         + res[0], Toast.LENGTH_SHORT).show();
-                Log.d("SecureChat", "encrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
+                Log.d(TAG, "encrypt data failed, time:" + begintime + "ms, error code=" + res[0]);
             }
 
         } else {
@@ -360,7 +362,7 @@ public class SignUpActivity extends AppCompatActivity {
                     //Toast.makeText(SignUpActivity.this, "Error " + task.getException().getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }else{
                     final FirebaseUser newUser = task.getResult().getUser();
-                    Log.d("SecureChat", "set firebase display name=" + name);
+                    Log.d(TAG, "set firebase display name=" + name);
                     //success creating user, now set display name as name
                     UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                             .setDisplayName(name)
@@ -372,7 +374,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 public void onComplete(@NonNull Task<Void> task) {
                                     disWaiting();
                                     if (task.isSuccessful()) {
-                                        Log.d("SecureChat", "User profile updated. Display name= " + newUser.getDisplayName());
+                                        Log.d(TAG, "User profile updated. Display name= " + newUser.getDisplayName());
                                         /***CREATE USER IN FIREBASE DB AND REDIRECT ON SUCCESS**/
                                         //createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);
                                         //createUserInDb(newUser.getUid(), newUser.getDisplayName(), newUser.getEmail(), publicKey);

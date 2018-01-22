@@ -59,6 +59,7 @@ import java.util.List;
 import kr.co.namee.permissiongen.PermissionGen;
 
 public class ChatMessagesActivity extends AppCompatActivity {
+    private static final String TAG = "SecureChat";
 
     private RecyclerView mChatsRecyclerView;
     private LinearLayoutManager mLayoutManager;
@@ -135,8 +136,8 @@ public class ChatMessagesActivity extends AppCompatActivity {
         mReceiverId = getIntent().getStringExtra("USER_ID");
         mReceiverPublicKey = getIntent().getStringExtra("RECEIVER_PUBLIC_KEY");
         mSenderPublicKey = getIntent().getStringExtra("SENDER_PUBLIC_KEY");
-        Log.d("SecureChat", "RECEIVER_PUBLIC_KEY= " + mReceiverPublicKey);
-        Log.d("SecureChat", "SENDER_PUBLIC_KEY= " + mSenderPublicKey);
+        Log.d(TAG, "RECEIVER_PUBLIC_KEY= " + mReceiverPublicKey);
+        Log.d(TAG, "SENDER_PUBLIC_KEY= " + mSenderPublicKey);
 
         prepareSecretKey(); //動態產生加密資料用的 3DES key，並且用 sender 和 receiver 的 RSA public key 將 3DES key 加密
 
@@ -164,7 +165,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        //Log.d("SecureChat", "onStart()");
+        //Log.d(TAG, "onStart()");
         /**sets title bar with recepient name**/
         queryRecipientName(mReceiverId);
 
@@ -176,7 +177,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        //Log.d("SecureChat", "Leave chat room...message count=" + mMessagesList.size());
+        //Log.d(TAG, "Leave chat room...message count=" + mMessagesList.size());
         doBurnAfterReading();
         if (mCard!=null){
             mCard.CloseSEService();
@@ -234,9 +235,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
         if (messageType.equals("text")){
             //把訊息內容用 3DES 加密起來
             String encryptedMessage = Utility.encryptString(byte3DESKey, message);
-            Log.d("SecureChat", "encrypt message with 3DES key: " + Utility.byte2Hex(byte3DESKey));
+            Log.d(TAG, "encrypt message with 3DES key: " + Utility.byte2Hex(byte3DESKey));
             if (encryptedMessage==null || encryptedMessage.length()<1){
-                Log.e("SecureChat", "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
+                Log.e(TAG, "Failed to encrypt message, key= " + byte3DESKey.toString() + ", message= " + message);
                 Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptMessage));
                 return;
             }
@@ -289,7 +290,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                                     if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
                                         chatMessage.setSenderName(mReceiverName);
                                         chatMessage.setSenderImage(mReceiverImageUrl);
-                                        Log.d("SecureChat", "mReceiverImageUrl=" + mReceiverImageUrl);
+                                        Log.d(TAG, "mReceiverImageUrl=" + mReceiverImageUrl);
                                         mMessagesList.add(chatMessage);
                                     }
 
@@ -310,12 +311,12 @@ public class ChatMessagesActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot snap, String prevChildKey) {
                 ChatMessage chatMessage = snap.getValue(ChatMessage.class);
                 chatMessage.setDbKey(snap.getKey());
-                Log.d("SecureChat", "message arrive db Key=" + snap.getKey());
+                Log.d(TAG, "message arrive db Key=" + snap.getKey());
 
                 if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
                     chatMessage.setSenderName(mReceiverName);
                     chatMessage.setSenderImage(mReceiverImageUrl);
-                    Log.d("SecureChat", "child event mReceiverImageUrl=" + mReceiverImageUrl);
+                    Log.d(TAG, "child event mReceiverImageUrl=" + mReceiverImageUrl);
                     mMessagesList.add(chatMessage);
                     mChatsRecyclerView.scrollToPosition(mMessagesList.size()-1);
                 }
@@ -422,17 +423,17 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }
 
         String str3DESKey = Utility.byte2Hex(bytes3DESKey);
-        //Log.d("SecureChat", "str3DESKey= " + str3DESKey);
+        //Log.d(TAG, "str3DESKey= " + str3DESKey);
         String resString = "";
         String res[] = null;
-        //Log.d("SecureChat", "str3DESKey= " + str3DESKey);
+        //Log.d(TAG, "str3DESKey= " + str3DESKey);
         //將 receiver 的 public key 寫入 0x0202，然後加密 3DES key
         resString = mCard.WriteFile(0x0202, 0, mReceiverPublicKey);
         if (resString != null && resString.equals(Card.RES_OK)) {
-            Log.d("SecureChat", "Write mReceiverPublicKey to SIM success！");
+            Log.d(TAG, "Write mReceiverPublicKey to SIM success！");
         } else {
             m3DESSecretKey = null;
-            Log.d("SecureChat", "Write File failed！ error code=" + resString);
+            Log.d(TAG, "Write File failed！ error code=" + resString);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToWriteReceiverPublicKeyToSIM));
             return;
@@ -440,16 +441,16 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
         //用 receiver 的 public key 加密 3DES key
         str3DESKey = Utility.paddingString(str3DESKey, 128);    //進行 padding
-        //Log.d("SecureChat", "str3DESKey padding= " + str3DESKey);
+        //Log.d(TAG, "str3DESKey padding= " + str3DESKey);
 
         res = mCard.RSAPubKeyCalc(str3DESKey, 0x0202);
         if (res != null && res[0].equals(Card.RES_OK)) {
-            Log.d("SecureChat", "SIM card encrypt receiver public key successfully");
-            //Log.d("SecureChat", "SIM card encrypted receiver public key= " + res[1]);
+            Log.d(TAG, "SIM card encrypt receiver public key successfully");
+            //Log.d(TAG, "SIM card encrypted receiver public key= " + res[1]);
             mReceiverPublicKey = res[1];    //將 receiver public key 換成加密過的 3DES key
         }else{
             m3DESSecretKey = null;
-            Log.d("SecureChat", "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
+            Log.d(TAG, "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForReceiver) + "error: " + res[0]);
             return;
@@ -459,11 +460,11 @@ public class ChatMessagesActivity extends AppCompatActivity {
         //用自己的 public key 加密 3DES key
         res = mCard.RSAPubKeyCalc(str3DESKey, 0x0201);
         if (res != null && res[0].equals(Card.RES_OK)) {
-            Log.d("SecureChat", "SIM card encrypt sender public key successfully");
+            Log.d(TAG, "SIM card encrypt sender public key successfully");
             mSenderPublicKey = res[1];    //將 sendver public key 換成加密過的 3DES key
         }else{
             m3DESSecretKey = null;
-            Log.d("SecureChat", "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
+            Log.d(TAG, "Encrypt 3DES with sender public key failed！ error code=" + res[0]);
             disWaiting();
             Utility.showMessage(myContext, getString(R.string.msgFailedToEncryptSecretKeyForSender) + "error: " + res[0]);
             return;
@@ -496,15 +497,15 @@ public class ChatMessagesActivity extends AppCompatActivity {
 
         if (!burnAfterReading) return;
         if (mMessagesList.isEmpty() || mMessagesList.size()<1) return;
-        Log.d("SecureChat", "Do burn after reading");
+        Log.d(TAG, "Do burn after reading");
         showWaiting(getString(R.string.msgPleaseWait), getString(R.string.msgProcessBurnAfterReading));
         int i = 0;
         ChatMessage msg = null;
         String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         for (i=0;i<mMessagesList.size();i++){
             msg = mMessagesList.get(i);
-            Log.d("SecureChat", "msg receiver id= " + msg.getReceiverId() + ", decrypted by sender= " + msg.getDecryptedBySender());
-            Log.d("SecureChat", "msg receiver id= " + msg.getReceiverId() + ", decrypted by receiver= " + msg.getDecryptedByReceiver());
+            Log.d(TAG, "msg receiver id= " + msg.getReceiverId() + ", decrypted by sender= " + msg.getDecryptedBySender());
+            Log.d(TAG, "msg receiver id= " + msg.getReceiverId() + ", decrypted by receiver= " + msg.getDecryptedByReceiver());
             if (msg.getReceiverId().equals(myUid) && msg.getDecryptedByReceiver()==true){
                 mMessagesDBRef.child(msg.getDbKey()).removeValue();
             }
@@ -605,10 +606,10 @@ public class ChatMessagesActivity extends AppCompatActivity {
         AudioRecordManager.getInstance(this).setMaxVoiceDuration(60);
         mAudioDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/SecureChat/audio/");
         if (!mAudioDir.exists()) {
-            Log.d("SecureChat", "create mAudioDir");
+            Log.d(TAG, "create mAudioDir");
             mAudioDir.mkdirs();
         }
-        Log.d("SecureChat", "mAudioDir" + mAudioDir.getAbsolutePath() + ", " + mAudioDir.exists());
+        Log.d(TAG, "mAudioDir" + mAudioDir.getAbsolutePath() + ", " + mAudioDir.exists());
 
         AudioRecordManager.getInstance(this).setAudioSavePath(mAudioDir.getAbsolutePath());
 
@@ -801,9 +802,9 @@ public class ChatMessagesActivity extends AppCompatActivity {
         File encryptedFile = null;
         try{
             originalFile = new File(mAudioUri.getPath());
-            //Log.d("SecureChat", "original file= " + originalFile.getAbsolutePath() + ", key= " + Utility.byte2Hex(m3DESSecretKey));
+            //Log.d(TAG, "original file= " + originalFile.getAbsolutePath() + ", key= " + Utility.byte2Hex(m3DESSecretKey));
             encryptedFile = Utility.encryptFile(m3DESSecretKey, originalFile);
-            //Log.d("SecureChat", "encryptedFile= " + (encryptedFile==null?"null":encryptedFile.getAbsolutePath()));
+            //Log.d(TAG, "encryptedFile= " + (encryptedFile==null?"null":encryptedFile.getAbsolutePath()));
             uploadAudioToFirebaseStorage(encryptedFile);
         }catch (Exception e){
             if (encryptedFile!=null && encryptedFile.exists()) encryptedFile.delete();
@@ -833,7 +834,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                     .setContentType("audio/m4a")
                     .setContentLanguage("en")
                     .build();
-            Log.d("SecureChat", "upload audio file message to storage");
+            Log.d(TAG, "upload audio file message to storage");
             mAudioStorageRef.child(dbKey).putBytes(fileByteArray, metadata).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
@@ -846,7 +847,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                         //success saving audio
                         String storageFileLink = task.getResult().getDownloadUrl().toString();
                         //送 message 出去給 receiver
-                        Log.d("SecureChat", "send audio file message to Messages database");
+                        Log.d(TAG, "send audio file message to Messages database");
                         sendMessageToFirebase(mAudioDbRef, "audio", storageFileLink, FirebaseAuth.getInstance().getCurrentUser().getUid(), mReceiverId, m3DESSecretKey, mSenderPublicKey, mReceiverPublicKey);
                         disWaiting();
                         return;
