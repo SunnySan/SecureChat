@@ -70,6 +70,8 @@ public class UpdateProfileActivity extends AppCompatActivity {
     private ProgressDialog pg = null;
     private Context myContext = null;
 
+    private boolean isPhotoChanged = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,7 +220,9 @@ public class UpdateProfileActivity extends AppCompatActivity {
                     String userPhoto = currentuser.getImage();
                     String userName = currentuser.getDisplayName();
 
-                    Picasso.with(UpdateProfileActivity.this).load(userPhoto).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
+                    //Log.d(TAG, "Picasso load image from firebase");
+                    //如果不判斷 isPhotoChanged 的話，當用戶拍照或選完檔案後，onDataChange 又會被 trigger 一次，造成 Picasso 又 load 回舊的圖案
+                    if (!isPhotoChanged) Picasso.with(UpdateProfileActivity.this).load(userPhoto).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
 
                     mUserNameEdit.setText(userName);
                 } catch (Exception e) {
@@ -287,9 +291,9 @@ public class UpdateProfileActivity extends AppCompatActivity {
             imageBitmap = (Bitmap) extras.get("data");
             //imageBitmap = data.getExtras().getParcelable("data");
             Log.d(TAG, "camera image ok, imageBitmap= " + imageBitmap.toString());
-            Bitmap resized = Bitmap.createScaledBitmap(imageBitmap, 100, 100, true);
-            mUserPhotoImageView.setImageBitmap(resized);
-            mUserPhotoImageView.invalidate();
+            //Bitmap resized = Bitmap.createScaledBitmap(imageBitmap, 100, 100, true);
+            mUserPhotoImageView.setImageBitmap(imageBitmap);
+            isPhotoChanged = true;
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -305,30 +309,14 @@ public class UpdateProfileActivity extends AppCompatActivity {
                 Utility.showMessage(myContext, getString(R.string.msgFailedToGetYourImage));
                 return;
             }
-            //Log.d(TAG, "pick image ok, imageBitmap= " + imageBitmap.toString());
-            //Uri selectedImage = data.getData();
-            //mUserPhotoImageView.setImageURI(selectedImage);
-            //mUserPhotoImageView.setImageBitmap(null);
-            try {
-                File filePhotoDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/SecureChat/");
-                if (!filePhotoDir.exists()) filePhotoDir.mkdirs();
-                File myPhoto = new File(filePhotoDir.getAbsolutePath() + "/myphoto.jpg");
-                OutputStream os = new FileOutputStream(myPhoto);
-                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
-                os.close();
-                os = null;
-                Picasso.with(UpdateProfileActivity.this).load(myPhoto).into(mUserPhotoImageView);
+            mUserPhotoImageView.setImageBitmap(imageBitmap);
+            isPhotoChanged = true;
+            //Log.d(TAG, "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()) + ", X=" + String.valueOf(imageBitmap.getWidth()));
 
-                //mUserPhotoImageView.setImageBitmap(imageBitmap);
-                //mUserPhotoImageView.invalidate();
-                Log.d(TAG, "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()) + ", X=" + String.valueOf(imageBitmap.getWidth()));
-
-                /**convert bitmap to byte array to store in firebase storage**/
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byteArray = stream.toByteArray();
-            }catch (Exception e){
-            }
+            /**convert bitmap to byte array to store in firebase storage**/
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byteArray = stream.toByteArray();
         }
     }
 
