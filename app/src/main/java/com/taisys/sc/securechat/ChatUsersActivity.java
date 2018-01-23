@@ -18,6 +18,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.taisys.sc.securechat.Application.App;
 import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.UsersAdapter;
 
@@ -49,7 +50,7 @@ public class ChatUsersActivity extends AppCompatActivity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        
+
     }
 
     private void populaterecyclerView(){
@@ -111,8 +112,6 @@ public class ChatUsersActivity extends AppCompatActivity {
         /**query users and add them to a list**/
         queryUsersAndAddthemToList();
     }
-
-
 
     private void checkIfUserIsSignIn(){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();

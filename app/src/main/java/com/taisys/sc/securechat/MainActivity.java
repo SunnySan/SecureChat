@@ -18,6 +18,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.taisys.oti.Card;
 import com.taisys.oti.Card.SCSupported;
+import com.taisys.sc.securechat.Application.App;
 import com.taisys.sc.securechat.util.Utility;
 
 import kr.co.namee.permissiongen.PermissionGen;
@@ -59,7 +60,12 @@ public class MainActivity extends AppCompatActivity {
                         , Manifest.permission.READ_EXTERNAL_STORAGE
                         , Manifest.permission.WRITE_EXTERNAL_STORAGE
                         , android.Manifest.permission.RECORD_AUDIO
-                        , android.Manifest.permission.WAKE_LOCK)
+                        , android.Manifest.permission.WAKE_LOCK
+                        , Manifest.permission.MODIFY_AUDIO_SETTINGS
+                        , Manifest.permission.VIBRATE
+                        , Manifest.permission.CAMERA
+                        , Manifest.permission.READ_LOGS
+                )
                 .request();
 
     }
@@ -69,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
         if (mCard!=null){
             mCard.CloseSEService();
         }
+
+        App.getLinphoneManager().destroy(); //把VoIP關掉
+
         Utility.showToast(myContext, "clean data...");
         super.onDestroy();
     }

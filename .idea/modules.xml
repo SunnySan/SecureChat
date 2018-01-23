@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/SecureChat.iml" filepath="$PROJECT_DIR$/SecureChat.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/liblinphone-android-sdk/liblinphone-android-sdk.iml" filepath="$PROJECT_DIR$/liblinphone-android-sdk/liblinphone-android-sdk.iml" />
+      <module fileurl="file://D:\APP\SecureChat\liblinphone-android-sdk\liblinphone-android-sdk.iml" filepath="D:\APP\SecureChat\liblinphone-android-sdk\liblinphone-android-sdk.iml" />
     </modules>
   </component>
 </project>
