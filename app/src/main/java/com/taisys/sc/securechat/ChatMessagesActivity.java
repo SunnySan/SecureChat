@@ -3,6 +3,7 @@ package com.taisys.sc.securechat;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -192,6 +196,41 @@ public class ChatMessagesActivity extends AppCompatActivity {
         }else{
             this.finish();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.chat_message_menu, menu);
+        //invalidateOptionsMenu();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.menuVoiceCall:
+                goToVoiceChat();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void goToVoiceChat(){
+        String senderId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Bundle bundle = new Bundle();
+        bundle.putString("MY_USER_ID", senderId);
+        bundle.putString("RECEIVER_USER_ID", mReceiverId);
+        bundle.putString("RECEIVER_NAME", mReceiverName);
+        bundle.putString("RECEIVER_IMAGE_URL", mReceiverImageUrl);
+
+        Intent intent = new Intent();
+        intent.setClass(this, VoiceChatActivity.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+        this.finish();
     }
 
     private void showWaiting(final String title, final String msg) {

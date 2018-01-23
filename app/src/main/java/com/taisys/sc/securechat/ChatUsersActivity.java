@@ -49,9 +49,7 @@ public class ChatUsersActivity extends AppCompatActivity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-
-
-
+        
     }
 
     private void populaterecyclerView(){

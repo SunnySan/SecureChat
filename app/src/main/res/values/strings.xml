@@ -72,4 +72,7 @@
     <string name="msgFailedToDecryptAudioFile">Failed to decrypt audio file</string>
     <string name="msgClickMeToDecryptAudio">Click me to decrypt audio</string>
 
+    <string name="labelVoiceCall">Voice call</string>
+    <string name="msgFailedToInitializeVoiceChatModule">Failed to initialize voice chat module</string>
+    <string name="msgFailedToMakeVoiceCall">Failed to make voice call</string>
 </resources>
