@@ -6,10 +6,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
@@ -38,12 +36,8 @@ import com.taisys.sc.securechat.model.User;
 import com.taisys.sc.securechat.util.Utility;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -309,9 +303,25 @@ public class UpdateProfileActivity extends AppCompatActivity {
                 Utility.showMessage(myContext, getString(R.string.msgFailedToGetYourImage));
                 return;
             }
-            mUserPhotoImageView.setImageBitmap(imageBitmap);
-            isPhotoChanged = true;
-            //Log.d(TAG, "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()) + ", X=" + String.valueOf(imageBitmap.getWidth()));
+
+            try {
+                /*
+                File filePhotoDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()+ "/SecureChat/");
+                if (!filePhotoDir.exists()) filePhotoDir.mkdirs();
+                File filePhoto = new File (filePhotoDir.getAbsolutePath()+"/myphoto.jpg");
+                FileOutputStream fos = new FileOutputStream(filePhoto);
+
+                imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                fos.close();
+                Picasso.with(UpdateProfileActivity.this).load(filePhoto).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
+                */
+                mUserPhotoImageView.setImageBitmap(imageBitmap);
+                isPhotoChanged = true;
+                //Log.d(TAG, "imageBitmap byte count= " + String.valueOf(imageBitmap.getByteCount()) + ", X=" + String.valueOf(imageBitmap.getWidth()));
+            }catch (Exception e){
+                Utility.showMessage(myContext, getString(R.string.msgFailedToGetYourImage) + ", error: " + e.toString());
+                isPhotoChanged = false;
+            }
 
             /**convert bitmap to byte array to store in firebase storage**/
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
