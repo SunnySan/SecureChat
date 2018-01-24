@@ -106,17 +106,18 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.ViewHolder> 
             @Override
             public void onClick(View v) {
                 //send this user id to chat messages activity
-                goToChatMessageActivity(user.getUserId(), user.getPublicKey());
+                goToChatMessageActivity(user.getUserId(), user.getPublicKey(), user.getIccid());
             }
         });
 
 
     }
 
-    private void goToChatMessageActivity(String personId, String publicKey){
+    private void goToChatMessageActivity(String personId, String publicKey, String iccid){
         Intent goToChatMessage = new Intent(mContext, ChatMessagesActivity.class);
         goToChatMessage.putExtra("USER_ID", personId);
         goToChatMessage.putExtra("RECEIVER_PUBLIC_KEY", publicKey);
+        goToChatMessage.putExtra("RECEIVER_ICCID", iccid);
         goToChatMessage.putExtra("SENDER_PUBLIC_KEY", myPublicKey);
         mContext.startActivity(goToChatMessage);
     }

@@ -64,9 +64,10 @@ public class ChatUsersActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        mLinphoneMiniManager = App.getLinphoneManager();
-        //mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
-        mLinphoneCore = LinphoneMiniManager.getInstance().getLinphoneCore();
+        //mLinphoneMiniManager = App.getLinphoneManager();
+        mLinphoneMiniManager = new LinphoneMiniManager(this);
+        mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
+        //mLinphoneCore = LinphoneMiniManager.getInstance().getLinphoneCore();
 
     }
 
@@ -195,6 +196,7 @@ public class ChatUsersActivity extends AppCompatActivity {
     private void registerSIPAccount(){
         String myID = mAuth.getCurrentUser().getUid();
         //if (myID.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) myID = "886986123101"; else myID = "886986123102";
+        myID = Utility.getMySetting(this, "iccid");
         myID = "+886986123101";
         String identity = "sip:" + myID + "@" + mVoIPDomain;
         try {
