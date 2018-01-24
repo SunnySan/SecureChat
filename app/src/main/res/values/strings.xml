@@ -74,5 +74,12 @@
 
     <string name="labelVoiceCall">Voice call</string>
     <string name="msgFailedToInitializeVoiceChatModule">Failed to initialize voice chat module</string>
+    <string name="msgFailedToRegisterVoiceChatAccount">Failed to register voice chat account, you are not able to initiate voice chat</string>
     <string name="msgFailedToMakeVoiceCall">Failed to make voice call</string>
+    <string name="labrlVoiceCallEnd">Call is ended</string>
+    <string name="labrlVoiceCallChatting">Voice chatting...</string>
+    <string name="labrlVoiceCallRinging">Ringing...</string>
+    <string name="labrlVoiceCallInterrupted">Call interrupted! Aborting...</string>
+    <string name="msgVoiceChatAbort">Abort</string>
+    <string name="msgVoiceChatEndCall">End call</string>
 </resources>

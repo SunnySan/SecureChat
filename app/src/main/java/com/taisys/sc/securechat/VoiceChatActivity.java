@@ -2,6 +2,8 @@ package com.taisys.sc.securechat;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -11,34 +13,22 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.taisys.sc.securechat.Application.App;
-import com.taisys.sc.securechat.util.LinphoneManager;
+import com.taisys.sc.securechat.util.LinphoneMiniManager;
 import com.taisys.sc.securechat.util.Utility;
 
 import org.linphone.core.LinphoneAddress;
-import org.linphone.core.LinphoneAuthInfo;
 import org.linphone.core.LinphoneCall;
-import org.linphone.core.LinphoneCallStats;
-import org.linphone.core.LinphoneChatMessage;
-import org.linphone.core.LinphoneChatRoom;
-import org.linphone.core.LinphoneContent;
 import org.linphone.core.LinphoneCore;
 import org.linphone.core.LinphoneCoreFactory;
-import org.linphone.core.LinphoneCoreListener;
-import org.linphone.core.LinphoneEvent;
-import org.linphone.core.LinphoneFriend;
-import org.linphone.core.LinphoneFriendList;
-import org.linphone.core.LinphoneInfoMessage;
-import org.linphone.core.LinphoneProxyConfig;
-import org.linphone.core.PublishState;
-import org.linphone.core.SubscriptionState;
 
 public class VoiceChatActivity extends AppCompatActivity{
     private static final String TAG = "SecureChat";
-    private static final String mVoIPDomain = "taisys.com";
-    private static final String mDefaultPassword = "111111";
+    //private static final String mVoIPDomain = "taisys.com";
+    private static final String mVoIPDomain = "sip.linphone.org";
 
     private ImageView mUserPhotoImageView;
     private TextView mContactNameTextView;
+    private TextView mStatusTextView;
     private Button mDoVoiceChatBtn;
     private Button mCancelVoiceChatBtn;
 
@@ -46,12 +36,19 @@ public class VoiceChatActivity extends AppCompatActivity{
     private String mReceiverName;
     private String mReceiverImageUrl;
     private String mMyId;
-    private boolean mIsCalling;
 
     private Context myContext = null;
 
-    private LinphoneManager mLinphoneManager;
+    private LinphoneMiniManager mLinphoneMiniManager;
     private LinphoneCore mLinphoneCore;
+    private LinphoneCall mCall;
+    private boolean mIsCalling;
+    private boolean mIsConnected;
+
+    //顯示畫面的UI Thread上的Handler
+    private Handler mUI_Handler = new Handler();
+    private Handler mThreadHandler;
+    private HandlerThread mThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +57,7 @@ public class VoiceChatActivity extends AppCompatActivity{
 
         mUserPhotoImageView = (ImageView)findViewById(R.id.userPhotoVoiceChat);
         mContactNameTextView = (TextView) findViewById(R.id.labelVoiceChatContactName);
+        mStatusTextView = (TextView) findViewById(R.id.labelVoiceChatStatus);
         mDoVoiceChatBtn = (Button)findViewById(R.id.doVoiceChatBtn);
         mCancelVoiceChatBtn = (Button)findViewById(R.id.cancelVoiceChatBtn);
 
@@ -76,8 +74,13 @@ public class VoiceChatActivity extends AppCompatActivity{
         Log.d(TAG, "mReceiverName=" + mReceiverName);
         Log.d(TAG, "mReceiverImageUrl=" + mReceiverImageUrl);
 
-        mLinphoneManager = App.getLinphoneManager();
-        mLinphoneCore = mLinphoneManager.getLinphoneCore();
+        mLinphoneMiniManager = App.getLinphoneManager();
+        //mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
+        mLinphoneCore = LinphoneMiniManager.getInstance().getLinphoneCore();
+
+        mThread = new HandlerThread("name");
+        mThread.start();
+        mThreadHandler=new Handler(mThread.getLooper());
 
         initView();
         initLinphone();
@@ -98,74 +101,123 @@ public class VoiceChatActivity extends AppCompatActivity{
 
     //初始化 Linphone VoIP
     private void initLinphone(){
+        mIsCalling = false;
+        mIsConnected = false;
         mDoVoiceChatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                doVoiceChat();
+                if (mIsCalling) {   //撥號中，將撥號中斷
+                    if (mCall!=null) mLinphoneCore.terminateCall(mCall);
+                }else{
+                    if (mIsConnected) { //通話中，將電話掛斷
+                        if (mCall!=null) mLinphoneCore.terminateCall(mCall);
+                    }else{  //idle狀態，進行撥號
+                        mIsCalling = true;
+                        mIsConnected = false;
+                        mThreadHandler.post(doVoiceChat);
+                    }
+                }
             }
         });
 
-        mIsCalling = true;
     }
 
-    private void doVoiceChat(){
-        //跟SIP Server 註冊帳號
-        String identity = "sip:" + mMyId + "@" + mVoIPDomain;
-        try {
-            LinphoneProxyConfig proxyConfig = mLinphoneCore.createProxyConfig(identity, mVoIPDomain, null, true);
-            proxyConfig.setExpires(300);
-
-            mLinphoneCore.addProxyConfig(proxyConfig);
-
-            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(
-                    mMyId, mDefaultPassword, null, mVoIPDomain);
-            mLinphoneCore.addAuthInfo(authInfo);
-            mLinphoneCore.setDefaultProxyConfig(proxyConfig);
-
-            //開始撥打電話
-            LinphoneCall call = mLinphoneCore.invite(mReceiverId);
-
-            boolean isConnected = false;
-            long iterateIntervalMs = 50L;
-
-            if (call == null) {
-                Log.d(TAG, "Could not place call to");
-            } else {
-                Log.d(TAG, "Call to: " + mReceiverId);
-
-                while (mIsCalling) {
-                    mLinphoneCore.iterate();
-
-                    try {
-                        Thread.sleep(iterateIntervalMs);
-
-                        if (call.getState().equals(LinphoneCall.State.CallEnd)
-                                || call.getState().equals(LinphoneCall.State.CallReleased)) {
-                            mIsCalling = false;
-                        }
-
-                        if (call.getState().equals(LinphoneCall.State.StreamsRunning)) {
-                            isConnected = true;
-                            // do your stuff
-                        }
-
-                        if (call.getState().equals(LinphoneCall.State.OutgoingRinging)) {
-                            // do your stuff
-                        }
-
-
-                    } catch (InterruptedException var8) {
-                        Log.d(TAG, "Interrupted! Aborting");
-                    }
-                }
-                if (!LinphoneCall.State.CallEnd.equals(call.getState())) {
-                    Log.d(TAG, "Terminating the call");
-                    mLinphoneCore.terminateCall(call);
+    private Runnable setVoiceChatButtonText=new Runnable () {
+        @Override
+        public void run() {
+            if (mIsCalling) {   //撥號中，顯示 Abort
+                mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
+                mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatAbort));
+            }else{
+                if (mIsConnected) { //通話中，將電話掛斷
+                    mStatusTextView.setText(getString(R.string.labrlVoiceCallChatting));
+                    mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatEndCall));
+                }else{  //idle狀態，進行撥號
+                    mStatusTextView.setText(getString(R.string.labrlVoiceCallEnd));
+                    mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
                 }
             }
-        }catch (Exception e){
-            Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
         }
-    }
+    };
+
+    private Runnable doVoiceChat=new Runnable () {
+        @Override
+        public void run() {
+            String receiverId = mReceiverId;
+            //if (!receiverId.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) receiverId = "886986123101"; else receiverId = "886986123102";
+            try {
+                //開始撥打電話
+                //mCall = mLinphoneCore.invite("sip:" + receiverId + "@" + mVoIPDomain);
+                LinphoneAddress la = LinphoneCoreFactory.instance().createLinphoneAddress(receiverId, mVoIPDomain, receiverId + "@" + mVoIPDomain);
+                mCall = mLinphoneCore.invite(la);
+
+                mIsConnected = false;
+                long iterateIntervalMs = 50L;
+
+                if (mCall == null) {
+                    Log.d(TAG, "Could not place call to");
+                    //mStatusTextView.setText(getString(R.string.msgFailedToMakeVoiceCall));
+                    mIsCalling = false;
+                    mIsConnected = false;
+                    mUI_Handler.post(setVoiceChatButtonText);
+                    return;
+                } else {
+                    Log.d(TAG, "Call to: " + receiverId);
+                    mIsCalling = true;
+                    mIsConnected = false;
+                    mUI_Handler.post(setVoiceChatButtonText);
+
+                    while (mIsCalling) {
+                        mLinphoneCore.iterate();
+
+                        try {
+                            Thread.sleep(iterateIntervalMs);
+
+                            if (mCall.getState().equals(LinphoneCall.State.CallEnd)
+                                    || mCall.getState().equals(LinphoneCall.State.CallReleased)) {
+                                mIsCalling = false;
+                                mIsConnected = false;
+                                mUI_Handler.post(setVoiceChatButtonText);
+                            }
+
+                            if (mCall.getState().equals(LinphoneCall.State.StreamsRunning)) {
+                                mIsCalling = false;
+                                mIsConnected = true;
+                                mUI_Handler.post(setVoiceChatButtonText);
+                            }
+
+                            if (mCall.getState().equals(LinphoneCall.State.OutgoingRinging)) {
+                                // do your stuff
+                                mIsCalling = true;
+                                mIsConnected = false;
+                                mUI_Handler.post(setVoiceChatButtonText);
+                            }
+
+
+                        } catch (InterruptedException var8) {
+                            Log.d(TAG, "Interrupted! Aborting");
+                            mIsCalling = false;
+                            mIsConnected = false;
+                            //mStatusTextView.setText(getString(R.string.labrlVoiceCallInterrupted));
+                            mUI_Handler.post(setVoiceChatButtonText);
+                        }
+                    }
+                    if (!LinphoneCall.State.CallEnd.equals(mCall.getState())) {
+                        Log.d(TAG, "Terminating the call");
+                        mIsCalling = false;
+                        mIsConnected = false;
+                        mUI_Handler.post(setVoiceChatButtonText);
+                        mLinphoneCore.terminateCall(mCall);
+                    }
+                }
+            }catch (Exception e){
+                Log.d(TAG, getString(R.string.msgFailedToMakeVoiceCall) + ", error= " + e.toString());
+                Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
+                mIsCalling = false;
+                mIsConnected = false;
+                mUI_Handler.post(setVoiceChatButtonText);
+            }
+        }
+    };
 
 }

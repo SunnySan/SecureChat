@@ -21,7 +21,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:id="@+id/labelVoiceChatContactName" />
+        android:id="@+id/labelVoiceChatContactName"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:text=""
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:id="@+id/labelVoiceChatStatus"
+        android:layout_gravity="center"/>
 
     <LinearLayout
         android:orientation="horizontal"

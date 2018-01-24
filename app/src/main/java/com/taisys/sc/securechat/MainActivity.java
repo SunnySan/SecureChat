@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         if (mCard!=null){
             mCard.CloseSEService();
         }
-
+        Log.d(TAG, "destroy Linphone...");
         App.getLinphoneManager().destroy(); //把VoIP關掉
 
         Utility.showToast(myContext, "clean data...");

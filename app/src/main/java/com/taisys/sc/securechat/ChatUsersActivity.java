@@ -20,13 +20,23 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.taisys.sc.securechat.Application.App;
 import com.taisys.sc.securechat.model.User;
+import com.taisys.sc.securechat.util.LinphoneMiniManager;
 import com.taisys.sc.securechat.util.UsersAdapter;
+import com.taisys.sc.securechat.util.Utility;
+
+import org.linphone.core.LinphoneAuthInfo;
+import org.linphone.core.LinphoneCore;
+import org.linphone.core.LinphoneCoreFactory;
+import org.linphone.core.LinphoneProxyConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatUsersActivity extends AppCompatActivity {
     private static final String TAG = "SecureChat";
+    //private static final String mVoIPDomain = "taisys.com";
+    private static final String mVoIPDomain = "sip.linphone.org";
+    private static final String mDefaultPassword = "111111";
 
     private FirebaseAuth mAuth;
     private DatabaseReference mUsersDBRef;
@@ -35,6 +45,9 @@ public class ChatUsersActivity extends AppCompatActivity {
     private UsersAdapter adapter;
     private List<User> mUsersList = new ArrayList<>();
     private String myPublicKey = "";    //目前這個 SIM 卡的 public key
+
+    private LinphoneMiniManager mLinphoneMiniManager;
+    private LinphoneCore mLinphoneCore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +63,10 @@ public class ChatUsersActivity extends AppCompatActivity {
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mLinphoneMiniManager = App.getLinphoneManager();
+        //mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
+        mLinphoneCore = LinphoneMiniManager.getInstance().getLinphoneCore();
 
     }
 
@@ -117,6 +134,7 @@ public class ChatUsersActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             // User is signed in
+            registerSIPAccount();   //跟SIP Server 註冊帳號
         } else {
             // No user is signed in
             /**go to login user first**/
@@ -171,6 +189,31 @@ public class ChatUsersActivity extends AppCompatActivity {
         goToHome();
         //now send user back to login screen
         //startActivity(new Intent(this, LoginActivity.class));
+    }
+
+    //跟SIP Server 註冊帳號
+    private void registerSIPAccount(){
+        String myID = mAuth.getCurrentUser().getUid();
+        //if (myID.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) myID = "886986123101"; else myID = "886986123102";
+        myID = "+886986123101";
+        String identity = "sip:" + myID + "@" + mVoIPDomain;
+        try {
+            LinphoneProxyConfig proxyConfig = mLinphoneCore.createProxyConfig(identity, mVoIPDomain, null, true);
+            proxyConfig.setExpires(300);
+
+            mLinphoneCore.addProxyConfig(proxyConfig);
+
+            LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(
+                    myID, mDefaultPassword, null, mVoIPDomain);
+            mLinphoneCore.addAuthInfo(authInfo);
+            mLinphoneCore.setDefaultProxyConfig(proxyConfig);
+            Log.d(TAG, "registered SIP account successfully, account name= " + identity);
+
+        }catch (Exception e){
+            Utility.showMessage(this, getString(R.string.msgFailedToRegisterVoiceChatAccount));
+            e.printStackTrace();
+        }
+
     }
 
 }
