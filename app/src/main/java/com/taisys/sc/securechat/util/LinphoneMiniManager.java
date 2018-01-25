@@ -56,9 +56,9 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
         try {
             String basePath = mContext.getFilesDir().getAbsolutePath();
             copyAssetsFromPackage(basePath);
-            //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
             android.util.Log.d(TAG, "sunny 1");
-            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
+            //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
             android.util.Log.d(TAG, "sunny 2");
             initLinphoneCoreValues(basePath);
             android.util.Log.d(TAG, "sunny 3");
@@ -188,8 +188,9 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
         try {
             if(cstate.equals(LinphoneCall.State.IncomingReceived)) {
                 // YOU HAVE AN INCOMING CALL
-                android.util.Log.d(TAG, "Call state: YOU HAVE AN INCOMING CALL");
+                android.util.Log.d(TAG, "Call state: YOU HAVE AN INCOMING CALL, remote address= " + call.getRemoteAddress().asString() + ", remote contact= " + call.getRemoteContact());
                 lc.acceptCall(call);
+
             }
         }catch (Exception e){
             android.util.Log.d(TAG, "Call state: Handle call failed, error= " + e.toString());
@@ -213,12 +214,11 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg,
                                   RegistrationState cstate, String smessage) {
         android.util.Log.d(TAG, "Registration state: " + cstate + "(" + smessage + ")");
-        /*
-                if (cstate.equals(RegistrationState.RegistrationFailed)){
-                    android.util.Log.d(TAG, "Registration failed, will destroy LinphoneCore");
-                    lc.destroy();
-                }
-                */
+        android.util.Log.d(TAG, "global state= " + lc.getGlobalState());
+        if (cstate.equals(RegistrationState.RegistrationFailed)){
+            android.util.Log.d(TAG, "Registration failed");
+
+        }
     }
 
     @Override

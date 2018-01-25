@@ -23,7 +23,7 @@ public class App extends Application {
 
         mContext = this;
 
-        //mLinphoneMiniManager = new LinphoneMiniManager(this);
+        mLinphoneMiniManager = new LinphoneMiniManager(this);
     }
 
     public static Context getContext(){

@@ -24,7 +24,8 @@ import org.linphone.core.LinphoneCoreFactory;
 public class VoiceChatActivity extends AppCompatActivity{
     private static final String TAG = "SecureChat";
     //private static final String mVoIPDomain = "taisys.com";
-    private static final String mVoIPDomain = "sip.linphone.org";
+    //private static final String mVoIPDomain = "sip.linphone.org";
+    private static final String mVoIPDomain = "iptel.org";
 
     private ImageView mUserPhotoImageView;
     private TextView mContactNameTextView;
@@ -89,6 +90,31 @@ public class VoiceChatActivity extends AppCompatActivity{
         initLinphone();
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mIsConnected){
+            mIsCalling = false;
+            mIsConnected = false;
+            mLinphoneCore.terminateCall(mCall);
+        }
+        finish();
+    }
+
+    @Override
+    public void onDestroy() {
+        try {
+            mIsCalling = false;
+            mIsConnected = false;
+            //if (mIsCalling)mLinphoneCore.terminateCall(mCall);
+        }
+        catch (RuntimeException e) {
+        }
+        finally {
+            mCall = null;
+        }
+        super.onDestroy();
+    }
+
     private void initView(){
         //mUserPhotoImageView.setImageURI(Uri.parse(mReceiverImageUrl));
         Picasso.with(myContext).load(mReceiverImageUrl).placeholder(R.mipmap.ic_launcher).into(mUserPhotoImageView);
@@ -97,7 +123,12 @@ public class VoiceChatActivity extends AppCompatActivity{
         mCancelVoiceChatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+            if (mIsConnected){
+                mIsCalling = false;
+                mIsConnected = false;
+                mLinphoneCore.terminateCall(mCall);
+            }
+            finish();
             }
         });
     }
@@ -111,9 +142,15 @@ public class VoiceChatActivity extends AppCompatActivity{
             public void onClick(View view) {
                 if (mIsCalling) {   //撥號中，將撥號中斷
                     if (mCall!=null) mLinphoneCore.terminateCall(mCall);
+                    mIsCalling = false;
+                    mIsConnected = false;
+                    mUI_Handler.post(setVoiceChatButtonText);
                 }else{
                     if (mIsConnected) { //通話中，將電話掛斷
                         if (mCall!=null) mLinphoneCore.terminateCall(mCall);
+                        mIsCalling = false;
+                        mIsConnected = false;
+                        mUI_Handler.post(setVoiceChatButtonText);
                     }else{  //idle狀態，進行撥號
                         mIsCalling = true;
                         mIsConnected = false;
@@ -128,6 +165,20 @@ public class VoiceChatActivity extends AppCompatActivity{
     private Runnable setVoiceChatButtonText=new Runnable () {
         @Override
         public void run() {
+            if (mIsConnected) { //通話中，將電話掛斷
+                mStatusTextView.setText(getString(R.string.labrlVoiceCallChatting));
+                mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatEndCall));
+            }else{  //idle狀態或撥號中，進行撥號或掛斷
+                if (mIsCalling) {   //撥號中，顯示 Abort
+                    mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
+                    mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatAbort));
+                }else{
+                    mStatusTextView.setText(getString(R.string.labrlVoiceCallEnd));
+                    mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
+                }
+            }
+
+            /*
             if (mIsCalling) {   //撥號中，顯示 Abort
                 mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
                 mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatAbort));
@@ -140,6 +191,7 @@ public class VoiceChatActivity extends AppCompatActivity{
                     mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
                 }
             }
+            */
         }
     };
 
@@ -147,6 +199,7 @@ public class VoiceChatActivity extends AppCompatActivity{
         @Override
         public void run() {
             String receiverId = mReceiverIccid;
+            receiverId = "8" + receiverId;
             //if (!receiverId.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) receiverId = "886986123101"; else receiverId = "886986123102";
             try {
                 //開始撥打電話
@@ -178,13 +231,13 @@ public class VoiceChatActivity extends AppCompatActivity{
 
                             if (mCall.getState().equals(LinphoneCall.State.CallEnd)
                                     || mCall.getState().equals(LinphoneCall.State.CallReleased)) {
+                                if (mIsConnected)
                                 mIsCalling = false;
                                 mIsConnected = false;
-                                mUI_Handler.post(setVoiceChatButtonText);
                             }
 
                             if (mCall.getState().equals(LinphoneCall.State.StreamsRunning)) {
-                                mIsCalling = false;
+                                mIsCalling = true;
                                 mIsConnected = true;
                                 mUI_Handler.post(setVoiceChatButtonText);
                             }

@@ -31,11 +31,16 @@ import org.linphone.core.LinphoneProxyConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
 
 public class ChatUsersActivity extends AppCompatActivity {
     private static final String TAG = "SecureChat";
     //private static final String mVoIPDomain = "taisys.com";
-    private static final String mVoIPDomain = "sip.linphone.org";
+    //private static final String mVoIPDomain = "sip.linphone.org";
+    //private static final String mVoIPDomain = "taisys.onsip.com";
+    private static final String mVoIPDomain = "iptel.org";
+
+    //private static final String mDefaultPassword = "taisys123456";
     private static final String mDefaultPassword = "111111";
 
     private FirebaseAuth mAuth;
@@ -48,6 +53,7 @@ public class ChatUsersActivity extends AppCompatActivity {
 
     private LinphoneMiniManager mLinphoneMiniManager;
     private LinphoneCore mLinphoneCore;
+    private Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,11 +70,47 @@ public class ChatUsersActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        //mLinphoneMiniManager = App.getLinphoneManager();
-        mLinphoneMiniManager = new LinphoneMiniManager(this);
+        mLinphoneMiniManager = App.getLinphoneManager();
+        //mLinphoneMiniManager = new LinphoneMiniManager(this);
         mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
         //mLinphoneCore = LinphoneMiniManager.getInstance().getLinphoneCore();
+        /*
+        try {
+            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(mLinphoneMiniManager, this);
+            TimerTask lTask = new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        mLinphoneCore.iterate();
+                    }catch (Exception e){
+                        android.util.Log.d(TAG, "ChatUserActivity Iterate err: " + e.toString());
+                        e.printStackTrace();
+                    }
+                }
+            };
 
+            mTimer = new Timer("SecureChat timer");
+            mTimer.schedule(lTask, 0, 20);
+
+        }catch (Exception e){
+            Utility.showMessage(this, getString(R.string.msgFailedToInitializeVoiceChatModule));
+        }
+        */
+
+    }
+
+    @Override
+    public void onDestroy() {
+        try {
+            mTimer.cancel();
+            mLinphoneCore.destroy();
+        }
+        catch (RuntimeException e) {
+        }
+        finally {
+            mLinphoneCore = null;
+        }
+        super.onDestroy();
     }
 
     private void populaterecyclerView(){
@@ -197,7 +239,7 @@ public class ChatUsersActivity extends AppCompatActivity {
         String myID = mAuth.getCurrentUser().getUid();
         //if (myID.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) myID = "886986123101"; else myID = "886986123102";
         myID = Utility.getMySetting(this, "iccid");
-        myID = "+886986123101";
+        myID = "8" + myID;
         String identity = "sip:" + myID + "@" + mVoIPDomain;
         try {
             LinphoneProxyConfig proxyConfig = mLinphoneCore.createProxyConfig(identity, mVoIPDomain, null, true);
@@ -208,11 +250,12 @@ public class ChatUsersActivity extends AppCompatActivity {
             LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(
                     myID, mDefaultPassword, null, mVoIPDomain);
             mLinphoneCore.addAuthInfo(authInfo);
-            mLinphoneCore.setDefaultProxyConfig(proxyConfig);
+            //mLinphoneCore.setDefaultProxyConfig(proxyConfig);
             Log.d(TAG, "registered SIP account successfully, account name= " + identity);
 
         }catch (Exception e){
             Utility.showMessage(this, getString(R.string.msgFailedToRegisterVoiceChatAccount));
+            Log.e(TAG, getString(R.string.msgFailedToRegisterVoiceChatAccount) + ", error= " + e.toString());
             e.printStackTrace();
         }
 

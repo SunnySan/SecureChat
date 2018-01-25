@@ -82,4 +82,7 @@
     <string name="labrlVoiceCallInterrupted">Call interrupted! Aborting...</string>
     <string name="msgVoiceChatAbort">Abort</string>
     <string name="msgVoiceChatEndCall">End call</string>
+    <string name="labelVoiceChatAcceptCall">Reject</string>
+    <string name="labelVoiceChatRejectCall">Reject</string>
+    <string name="msgCoudntFindIncomingCall">Counnot find incoming call</string>
 </resources>

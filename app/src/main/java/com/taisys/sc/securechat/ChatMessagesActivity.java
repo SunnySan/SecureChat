@@ -89,6 +89,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
     private String mReceiverId;
     private String mReceiverName;
     private String mReceiverImageUrl;
+    private String mReceiverIccid;
 
     private byte[] m3DESSecretKey = null;
     private String mReceiverPublicKey = "";
@@ -104,7 +105,6 @@ public class ChatMessagesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_messages);
-
 
         //initialize the views
         mChatsRecyclerView = (RecyclerView)findViewById(R.id.messagesRecyclerView);
@@ -225,6 +225,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
         bundle.putString("RECEIVER_USER_ID", mReceiverId);
         bundle.putString("RECEIVER_NAME", mReceiverName);
         bundle.putString("RECEIVER_IMAGE_URL", mReceiverImageUrl);
+        bundle.putString("RECEIVER_ICCID", mReceiverIccid);
 
         Intent intent = new Intent();
         intent.setClass(this, VoiceChatActivity.class);
@@ -398,6 +399,7 @@ public class ChatMessagesActivity extends AppCompatActivity {
                 User recepient = dataSnapshot.getValue(User.class);
                 mReceiverName = recepient.getDisplayName();
                 mReceiverImageUrl = recepient.getImage();
+                mReceiverIccid = recepient.getIccid();
 
                 try {
                     getSupportActionBar().setTitle(mReceiverName);

@@ -22,13 +22,13 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- for VoIP -->
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_LOGS" />
 
     <!-- Needed to allow Linphone to install on tablets, since android.permission.CAMERA implies android.hardware.camera and android.hardware.camera.autofocus are required -->
-    <!--<uses-feature 	 android:name="android.hardware.camera" android:required="false" /> 有這一行build會失敗-->
+    <!-- <uses-feature 	 android:name="android.hardware.camera" android:required="false" /> 有這一行build會失敗 -->
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -73,7 +73,8 @@
         <activity
             android:name=".ChangePinCodeActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".VoiceChatActivity"></activity>
+        <activity android:name=".VoiceChatActivity" />
+        <activity android:name=".VoiceChatIncomingCallActivity"></activity>
     </application>
 
 </manifest>
