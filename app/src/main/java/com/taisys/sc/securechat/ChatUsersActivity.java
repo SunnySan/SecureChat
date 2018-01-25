@@ -250,7 +250,7 @@ public class ChatUsersActivity extends AppCompatActivity {
             LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(
                     myID, mDefaultPassword, null, mVoIPDomain);
             mLinphoneCore.addAuthInfo(authInfo);
-            //mLinphoneCore.setDefaultProxyConfig(proxyConfig);
+            mLinphoneCore.setDefaultProxyConfig(proxyConfig);
             Log.d(TAG, "registered SIP account successfully, account name= " + identity);
 
         }catch (Exception e){

@@ -226,12 +226,14 @@ public class ChatMessagesActivity extends AppCompatActivity {
         bundle.putString("RECEIVER_NAME", mReceiverName);
         bundle.putString("RECEIVER_IMAGE_URL", mReceiverImageUrl);
         bundle.putString("RECEIVER_ICCID", mReceiverIccid);
+        bundle.putString("CALLER_ADDRESS", "");
+
 
         Intent intent = new Intent();
         intent.setClass(this, VoiceChatActivity.class);
         intent.putExtras(bundle);
         startActivity(intent);
-        this.finish();
+        //this.finish();
     }
 
     private void showWaiting(final String title, final String msg) {

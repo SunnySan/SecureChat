@@ -4,10 +4,15 @@ package com.taisys.sc.securechat.util;
  * Created by sunny on 2018/1/23.
  */
 
+import android.bluetooth.BluetoothClass;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Bundle;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.taisys.sc.securechat.R;
+import com.taisys.sc.securechat.VoiceChatActivity;
 
 import org.linphone.core.LinphoneAddress;
 import org.linphone.core.LinphoneAuthInfo;
@@ -48,12 +53,14 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     private Context mContext;
     private LinphoneCore mLinphoneCore;
     private Timer mTimer;
+    private int mRegistrationStatus;
 
     public LinphoneMiniManager(Context c) {
         mContext = c;
         LinphoneCoreFactory.instance().setDebugMode(true, TAG + "LinphoneMiniManager");
 
         try {
+            mRegistrationStatus = 0;
             String basePath = mContext.getFilesDir().getAbsolutePath();
             copyAssetsFromPackage(basePath);
             mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
@@ -62,7 +69,8 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             android.util.Log.d(TAG, "sunny 2");
             initLinphoneCoreValues(basePath);
             android.util.Log.d(TAG, "sunny 3");
-            //mLinphoneCore.clearAuthInfos();
+            //mLinphoneCore.refreshRegisters();
+            mLinphoneCore.clearAuthInfos();
             android.util.Log.d(TAG, "sunny 4");
 
             setUserAgent();
@@ -111,7 +119,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             @Override
             public void run() {
                 try {
-                    mLinphoneCore.iterate();
+                    if (mRegistrationStatus<5) mLinphoneCore.iterate();
                 }catch (Exception e){
                     android.util.Log.d(TAG, "Iterate err: " + e.toString());
                     e.printStackTrace();
@@ -170,6 +178,8 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
         return mLinphoneCore;
     }
 
+    public int getRegistrationStatus(){ return mRegistrationStatus; }
+
     @Override
     public void authInfoRequested(LinphoneCore lc, java.lang.String realm, java.lang.String username, java.lang.String domain){
         android.util.Log.d(TAG, "authInfoRequested, realm= " + realm + ", username= " + username + ", domain= " + domain);
@@ -188,8 +198,22 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
         try {
             if(cstate.equals(LinphoneCall.State.IncomingReceived)) {
                 // YOU HAVE AN INCOMING CALL
-                android.util.Log.d(TAG, "Call state: YOU HAVE AN INCOMING CALL, remote address= " + call.getRemoteAddress().asString() + ", remote contact= " + call.getRemoteContact());
-                lc.acceptCall(call);
+                String callerAddress = call.getRemoteAddress().asString();
+                android.util.Log.d(TAG, "Call state: YOU HAVE AN INCOMING CALL, remote address= " + callerAddress + ", remote contact= " + call.getRemoteContact());
+                Bundle bundle = new Bundle();
+                bundle.putString("MY_USER_ID", "");
+                bundle.putString("RECEIVER_USER_ID", "");
+                bundle.putString("RECEIVER_NAME", "");
+                bundle.putString("RECEIVER_IMAGE_URL", "");
+                bundle.putString("RECEIVER_ICCID", "");
+                bundle.putString("CALLER_ADDRESS", callerAddress);
+
+                Intent intent = new Intent();
+                intent.setClass(mContext, VoiceChatActivity.class);
+                intent.putExtras(bundle);
+                mContext.startActivity(intent);
+
+                //lc.acceptCall(call);
 
             }
         }catch (Exception e){
@@ -215,9 +239,19 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
                                   RegistrationState cstate, String smessage) {
         android.util.Log.d(TAG, "Registration state: " + cstate + "(" + smessage + ")");
         android.util.Log.d(TAG, "global state= " + lc.getGlobalState());
+        if (cstate.equals(RegistrationState.RegistrationOk)){
+            mRegistrationStatus = 1;
+        }
         if (cstate.equals(RegistrationState.RegistrationFailed)){
             android.util.Log.d(TAG, "Registration failed");
-
+            if (smessage.equals("io error")) {
+                mRegistrationStatus ++;
+                mLinphoneCore.refreshRegisters();   //等網路通了再試一次
+                android.util.Log.d(TAG, "refresh Registers");
+            }else{
+                mRegistrationStatus = 5;    //這樣就不會再做 mLinphoneCore.iterate();，如果註冊失敗又繼續的話，程式會 crash
+                android.util.Log.d(TAG, "terminate Registers");
+            }
         }
     }
 

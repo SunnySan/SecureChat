@@ -73,7 +73,8 @@
         <activity
             android:name=".ChangePinCodeActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".VoiceChatActivity" />
+        <activity android:name=".VoiceChatActivity"
+            android:screenOrientation="portrait" />
         <activity android:name=".VoiceChatIncomingCallActivity"></activity>
     </application>
 
