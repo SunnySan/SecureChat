@@ -397,7 +397,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void createUserInDb(String userId, final String displayName, String email, String publicKey){
         mUsersDBref = FirebaseDatabase.getInstance().getReference().child("Users");
-        User user = new User(userId, displayName, email, publicKey);
+        User user = new User(userId, displayName, email, publicKey, iccid);
         mUsersDBref.child(userId).setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {

@@ -35,6 +35,7 @@ public class VoiceChatActivity extends AppCompatActivity{
     private String mReceiverId;
     private String mReceiverName;
     private String mReceiverImageUrl;
+    private String mReceiverIccid;
     private String mMyId;
 
     private Context myContext = null;
@@ -68,11 +69,13 @@ public class VoiceChatActivity extends AppCompatActivity{
         mReceiverId = getIntent().getStringExtra("RECEIVER_USER_ID");
         mReceiverName = getIntent().getStringExtra("RECEIVER_NAME");
         mReceiverImageUrl = getIntent().getStringExtra("RECEIVER_IMAGE_URL");
+        mReceiverIccid = getIntent().getStringExtra("RECEIVER_ICCID");
 
         Log.d(TAG, "mMyId=" + mMyId);
         Log.d(TAG, "mReceiverId=" + mReceiverId);
         Log.d(TAG, "mReceiverName=" + mReceiverName);
         Log.d(TAG, "mReceiverImageUrl=" + mReceiverImageUrl);
+        Log.d(TAG, "mReceiverIccid=" + mReceiverIccid);
 
         mLinphoneMiniManager = App.getLinphoneManager();
         //mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
@@ -143,7 +146,7 @@ public class VoiceChatActivity extends AppCompatActivity{
     private Runnable doVoiceChat=new Runnable () {
         @Override
         public void run() {
-            String receiverId = mReceiverId;
+            String receiverId = mReceiverIccid;
             //if (!receiverId.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) receiverId = "886986123101"; else receiverId = "886986123102";
             try {
                 //開始撥打電話

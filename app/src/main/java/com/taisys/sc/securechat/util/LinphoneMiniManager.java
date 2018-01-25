@@ -56,18 +56,28 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
         try {
             String basePath = mContext.getFilesDir().getAbsolutePath();
             copyAssetsFromPackage(basePath);
-            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+            //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+            android.util.Log.d(TAG, "sunny 1");
+            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
+            android.util.Log.d(TAG, "sunny 2");
             initLinphoneCoreValues(basePath);
+            android.util.Log.d(TAG, "sunny 3");
+            //mLinphoneCore.clearAuthInfos();
+            android.util.Log.d(TAG, "sunny 4");
 
             setUserAgent();
             setFrontCamAsDefault();
+            android.util.Log.d(TAG, "sunny 5");
             startIterate();
             mInstance = this;
+            android.util.Log.d(TAG, "sunny 6");
 
-            //mLinphoneCore.setMaxCalls(3);
+            mLinphoneCore.setMaxCalls(3);
             mLinphoneCore.setNetworkReachable(true); // Let's assume it's true
-            //mLinphoneCore.enableVideo(false, false);
-            mLinphoneCore.addListener(this);
+            mLinphoneCore.enableVideo(false, false);
+            android.util.Log.d(TAG, "sunny 7");
+            //mLinphoneCore.addListener(this);
+            android.util.Log.d(TAG, "sunny 8");
             Log.i(TAG + ":create LinphoneCore: ", "create LinphoneCore succesfully");
         } catch (LinphoneCoreException e) {
             Log.i(TAG + ":create LinphoneCore: ", "LinphoneCoreException, error=" + e.toString());
@@ -96,16 +106,21 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     }
 
     private void startIterate() {
-        Log.d(TAG, "startIterate");
+        android.util.Log.d(TAG, "startIterate");
         TimerTask lTask = new TimerTask() {
             @Override
             public void run() {
-                mLinphoneCore.iterate();
+                try {
+                    mLinphoneCore.iterate();
+                }catch (Exception e){
+                    android.util.Log.d(TAG, "Iterate err: " + e.toString());
+                    e.printStackTrace();
+                }
             }
         };
 
 		/*use schedule instead of scheduleAtFixedRate to avoid iterate from being call in burst after cpu wake up*/
-        mTimer = new Timer("SecureChat scheduler");
+        mTimer = new Timer("SecureChat timer");
         mTimer.schedule(lTask, 0, 20);
     }
 
@@ -163,21 +178,21 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
 
     @Override
     public void globalState(LinphoneCore lc, GlobalState state, String message) {
-        Log.d(TAG + ":Global state: " + state + "(" + message + ")");
+        android.util.Log.d(TAG, "Global state: " + state + "(" + message + ")");
     }
 
     @Override
     public void callState(LinphoneCore lc, LinphoneCall call, State cstate,
                           String message) {
-        Log.d(TAG + ":Call state: " + cstate + "(" + message + ")");
+        android.util.Log.d(TAG,"Call state: " + cstate + "(" + message + ")");
         try {
             if(cstate.equals(LinphoneCall.State.IncomingReceived)) {
                 // YOU HAVE AN INCOMING CALL
-                Log.d(TAG + ":Call state: YOU HAVE AN INCOMING CALL");
+                android.util.Log.d(TAG, "Call state: YOU HAVE AN INCOMING CALL");
                 lc.acceptCall(call);
             }
         }catch (Exception e){
-            Log.d(TAG + ":Call state: Handle call failed, error= " + e.toString());
+            android.util.Log.d(TAG, "Call state: Handle call failed, error= " + e.toString());
             e.printStackTrace();
         }
     }
@@ -185,7 +200,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     @Override
     public void callStatsUpdated(LinphoneCore lc, LinphoneCall call,
                                  LinphoneCallStats stats) {
-        Log.d(TAG + ":callStatsUpdated: " + stats.toString());
+        android.util.Log.d(TAG, "callStatsUpdated: " + stats.toString());
     }
 
     @Override
@@ -197,7 +212,13 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     @Override
     public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg,
                                   RegistrationState cstate, String smessage) {
-        Log.d(TAG + ":Registration state: " + cstate + "(" + smessage + ")");
+        android.util.Log.d(TAG, "Registration state: " + cstate + "(" + smessage + ")");
+        /*
+                if (cstate.equals(RegistrationState.RegistrationFailed)){
+                    android.util.Log.d(TAG, "Registration failed, will destroy LinphoneCore");
+                    lc.destroy();
+                }
+                */
     }
 
     @Override
@@ -214,12 +235,12 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     @Override
     public void messageReceived(LinphoneCore lc, LinphoneChatRoom cr,
                                 LinphoneChatMessage message) {
-        Log.d(TAG + ":Message received from " + cr.getPeerAddress().asString() + " : " + message.getText() + "(" + message.getExternalBodyUrl() + ")");
+        android.util.Log.d(TAG, "Message received from " + cr.getPeerAddress().asString() + " : " + message.getText() + "(" + message.getExternalBodyUrl() + ")");
     }
 
     @Override
     public void isComposingReceived(LinphoneCore lc, LinphoneChatRoom cr) {
-        Log.d(TAG + ":Composing received from " + cr.getPeerAddress().asString());
+        android.util.Log.d(TAG, "Composing received from " + cr.getPeerAddress().asString());
     }
 
     @Override
@@ -260,7 +281,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     @Override
     public void notifyReceived(LinphoneCore lc, LinphoneEvent ev,
                                String eventName, LinphoneContent content) {
-        Log.d(TAG + ":Notify received: " + eventName + " -> " + content.getDataAsString());
+        android.util.Log.d(TAG, "Notify received: " + eventName + " -> " + content.getDataAsString());
     }
 
     @Override
@@ -272,7 +293,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     @Override
     public void configuringStatus(LinphoneCore lc,
                                   RemoteProvisioningState state, String message) {
-        Log.d(TAG + ":Configuration state: " + state + "(" + message + ")");
+        android.util.Log.d(TAG, "Configuration state: " + state + "(" + message + ")");
     }
 
     @Override

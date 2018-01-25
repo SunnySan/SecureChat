@@ -10,15 +10,18 @@ public class User {
     private String email;
     private String publicKey;
     private String image;
+    private String iccid;
+
 
     public User() {
     }
 
-    public User(String userId, String displayName, String email, String publicKey) {
+    public User(String userId, String displayName, String email, String publicKey, String iccid) {
         this.userId = userId;
         this.displayName = displayName;
         this.email = email;
         this.publicKey = publicKey;
+        this.iccid = iccid;
     }
 
     public String getUserId() {
@@ -59,6 +62,14 @@ public class User {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getIccid() {
+        return iccid;
+    }
+
+    public void setIccid(String iccid) {
+        this.iccid = iccid;
     }
 
 }
