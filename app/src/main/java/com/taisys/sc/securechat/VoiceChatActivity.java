@@ -28,6 +28,8 @@ import org.linphone.core.LinphoneCall;
 import org.linphone.core.LinphoneCore;
 import org.linphone.core.LinphoneCoreFactory;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class VoiceChatActivity extends AppCompatActivity{
     private static final String TAG = "SecureChat";
     //private static final String mSIPDomain = "taisys.com";
@@ -38,8 +40,8 @@ public class VoiceChatActivity extends AppCompatActivity{
     private ImageView mUserPhotoImageView;
     private TextView mContactNameTextView;
     private TextView mStatusTextView;
-    private Button mDoVoiceChatBtn;
-    private Button mCancelVoiceChatBtn;
+    private CircleImageView mDoVoiceChatBtn;
+    private CircleImageView mCancelVoiceChatBtn;
 
     private String mReceiverId;
     private String mReceiverName;
@@ -56,7 +58,6 @@ public class VoiceChatActivity extends AppCompatActivity{
     private LinphoneCore mLinphoneCore;
     private LinphoneCall mCall;
     private boolean mIsCalling;
-    private boolean mIsConnected;
 
     //顯示畫面的UI Thread上的Handler
     private Handler mUI_Handler = new Handler();
@@ -71,8 +72,8 @@ public class VoiceChatActivity extends AppCompatActivity{
         mUserPhotoImageView = (ImageView)findViewById(R.id.userPhotoVoiceChat);
         mContactNameTextView = (TextView) findViewById(R.id.labelVoiceChatContactName);
         mStatusTextView = (TextView) findViewById(R.id.labelVoiceChatStatus);
-        mDoVoiceChatBtn = (Button)findViewById(R.id.doVoiceChatBtn);
-        mCancelVoiceChatBtn = (Button)findViewById(R.id.cancelVoiceChatBtn);
+        mDoVoiceChatBtn = (CircleImageView)findViewById(R.id.doVoiceChatBtn);
+        mCancelVoiceChatBtn = (CircleImageView)findViewById(R.id.cancelVoiceChatBtn);
 
         myContext = this;
 
@@ -110,20 +111,23 @@ public class VoiceChatActivity extends AppCompatActivity{
 
     @Override
     public void onBackPressed() {
-        if (mIsConnected){
-            mIsCalling = false;
-            mIsConnected = false;
-            mLinphoneCore.terminateCall(mCall);
+        if (mIsCalling){
+            Log.i(TAG, "onBackPressed terminate call");
+            if (mCall!=null) mLinphoneCore.terminateCall(mCall);
         }
+        mIsCalling = false;
         finish();
     }
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy");
         try {
+            if (mIsCalling){
+                Log.i(TAG, "onDestroy terminate call");
+                if (mCall!=null) mLinphoneCore.terminateCall(mCall);
+            }
             mIsCalling = false;
-            mIsConnected = false;
-            //if (mIsCalling)mLinphoneCore.terminateCall(mCall);
         }
         catch (RuntimeException e) {
         }
@@ -141,8 +145,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                 return;
             }
             mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
-            mDoVoiceChatBtn.setText(getString(R.string.labelVoiceChatAcceptCall));
-            mCancelVoiceChatBtn.setText(getString(R.string.labelVoiceChatRejectCall));
 
         }else{
             displayUserNameAndPicture();
@@ -151,12 +153,18 @@ public class VoiceChatActivity extends AppCompatActivity{
         mCancelVoiceChatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            if (mIsConnected){
-                mIsCalling = false;
-                mIsConnected = false;
+            /*
+                        if (mIsConnected){
+                            mIsCalling = false;
+                            mIsConnected = false;
+                            mLinphoneCore.terminateCall(mCall);
+                        }
+                        */
+            if (mIsCalling && mCall!=null) {
                 mLinphoneCore.terminateCall(mCall);
+            }else{
+                finish();
             }
-            finish();
             }
         });
     }
@@ -172,10 +180,13 @@ public class VoiceChatActivity extends AppCompatActivity{
             return;
         }
 
+        String sPrefixLength = Utility.getMySetting(myContext, "sipAccountPrefix");
+        int iPrefixLength = 0;
+        if (sPrefixLength!=null && sPrefixLength.length()>0) iPrefixLength = Integer.parseInt(sPrefixLength);
         String s = mCall.getRemoteAddress().asString().toLowerCase();
         s = s.replaceAll("sip:", "");
         //s = s.substring(1, s.indexOf("@")); //從 1 開始是因為SIP帳號是 8 + iccid，所以要把 8 去掉
-        s = s.substring(0, s.indexOf("@")); //從 1 開始是因為SIP帳號是 8 + iccid，所以要把 8 去掉
+        s = s.substring(iPrefixLength, s.indexOf("@")); //從 1 開始是因為SIP帳號是 8 + iccid，所以要把 8 去掉
         mReceiverIccid = s;
         Log.d(TAG, "incoming call, look up caller ICCID: " + s);
         if (mReceiverIccid==null || mReceiverIccid.length()<1) return;
@@ -224,145 +235,79 @@ public class VoiceChatActivity extends AppCompatActivity{
 
     //初始化 Linphone VoIP
     private void initLinphone(){
-        if (mCallerAddress!=null && mCallerAddress.length()>0) { //這是 incoming call
+        mIsCalling = false;
+        if (mCallerAddress!=null && mCallerAddress.length()>0 && mCall!=null) { //這是 incoming call
             mIsCalling = true;
+            mThreadHandler.post(doVoiceChat);
         }
-        mIsConnected = false;
         mDoVoiceChatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "mIsCalling = " + mIsCalling + ", mIsConnected = " + mIsConnected);
-                if (mIsCalling) {   //撥號中，若為incoming call則接聽，否則為outgoing call，將撥號中斷
-                    if (mCallerAddress!=null && mCallerAddress.length()>0) { //這是 incoming call
-                        try {
-                            if (mCall!=null){
-                                Log.d(TAG, "OnClick, this is incoming call, user accept call");
-                                mIsCalling = true;
-                                mIsConnected = true;
-                                mLinphoneCore.acceptCall(mCall);
-                                mThreadHandler.post(doVoiceChat);
-                            }
-                        }catch (Exception e){
-                            if (mCall!=null) mLinphoneCore.terminateCall(mCall);
-                            mIsCalling = false;
-                            mIsConnected = false;
-                            Utility.showMessage(myContext, getString(R.string.msgFailedToPickUpTheCall));
-                            finish();
-                        }
-                    }else{
+                if (mCallerAddress!=null && mCallerAddress.length()>0) { //這是 incoming call
+                    try {
                         if (mCall!=null){
-                            Log.d(TAG, "OnClick, this is outgoing call, user terminate call");
-                            mLinphoneCore.terminateCall(mCall);
+                            Log.d(TAG, "OnClick, this is incoming call, user accept call");
+                            mLinphoneCore.acceptCall(mCall);
+                            mIsCalling = true;
+                            mUI_Handler.post(hideDoVoiceChatButton);
+                            //mThreadHandler.post(doVoiceChat);
                         }
+                    }catch (Exception e){
+                        if (mCall!=null) mLinphoneCore.terminateCall(mCall);
                         mIsCalling = false;
-                        mIsConnected = false;
+                        Utility.showMessage(myContext, getString(R.string.msgFailedToPickUpTheCall));
                         finish();
                     }
-                    mUI_Handler.post(setVoiceChatButtonText);
                 }else{
-                    if (mIsConnected) { //通話中，將電話掛斷
-                        if (mCall!=null){
-                            Log.d(TAG, "OnClick, in chatting, terminate call");
-                            mLinphoneCore.terminateCall(mCall);
-                        }
-                        mIsCalling = false;
-                        mIsConnected = false;
-                        //mUI_Handler.post(setVoiceChatButtonText);
-                        finish();
-                    }else{  //idle狀態，進行撥號
-                        Log.d(TAG, "OnClick, idle state, make call");
-                        mIsCalling = true;
-                        mIsConnected = false;
-                        mThreadHandler.post(doVoiceChat);
-                    }
+                    doCallOut();
                 }
             }
         });
 
     }
 
-    private Runnable setVoiceChatButtonText=new Runnable () {
-        @Override
-        public void run() {
-            if (mIsConnected) { //通話中，將電話掛斷
-                mStatusTextView.setText(getString(R.string.labrlVoiceCallChatting));
-                mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatEndCall));
-            }else{  //idle狀態或撥號中或等待接聽，進行撥號或掛斷
-                if (mCallerAddress!=null && mCallerAddress.length()>0) { //這是 incoming call
-                    if (mIsCalling) {   //等待接聽，顯示 Accept
-                        mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
-                        mDoVoiceChatBtn.setText(getString(R.string.labelVoiceChatAcceptCall));
-                        mCancelVoiceChatBtn.setText(getString(R.string.labelBack));
-                    }else{
-                        mStatusTextView.setText(getString(R.string.labrlVoiceCallEnd));
-                        mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
-                    }
-                }else{  //這是outgoing call
-                    if (mIsCalling) {   //撥號中，顯示 Abort
-                        mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
-                        mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatAbort));
-                    }else{
-                        mStatusTextView.setText(getString(R.string.labrlVoiceCallEnd));
-                        mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
-                    }
-                }
-            }
-
-            /*
-            if (mIsCalling) {   //撥號中，顯示 Abort
-                mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
-                mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatAbort));
-            }else{
-                if (mIsConnected) { //通話中，將電話掛斷
-                    mStatusTextView.setText(getString(R.string.labrlVoiceCallChatting));
-                    mDoVoiceChatBtn.setText(getString(R.string.msgVoiceChatEndCall));
-                }else{  //idle狀態，進行撥號
-                    mStatusTextView.setText(getString(R.string.labrlVoiceCallEnd));
-                    mDoVoiceChatBtn.setText(getString(R.string.labelVoiceCall));
-                }
-            }
-            */
+    private void doCallOut(){
+        String receiverId = "";
+        receiverId = mReceiverIccid;
+        //開始撥打電話
+        //mCall = mLinphoneCore.invite("sip:" + receiverId + "@" + mSIPDomain);
+        String sipAccountPrefix = Utility.getMySetting(myContext, "sipAccountPrefix");
+        if (sipAccountPrefix!=null && sipAccountPrefix.length()>0) receiverId = sipAccountPrefix + receiverId;
+        LinphoneAddress la = LinphoneCoreFactory.instance().createLinphoneAddress(receiverId, mSIPDomain, receiverId + "@" + mSIPDomain);
+        try {
+            mCall = mLinphoneCore.invite(la);
+            mIsCalling = true;
+            mUI_Handler.post(hideDoVoiceChatButton);
+            mThreadHandler.post(doVoiceChat);
+        }catch (Exception e){
+            mIsCalling = false;
+            Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
+            if (mCall!=null) mLinphoneCore.terminateCall(mCall);
         }
-    };
+
+    }
 
     private Runnable doVoiceChat=new Runnable () {
         @Override
         public void run() {
-            String receiverId = "";
-            //if (!receiverId.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) receiverId = "886986123101"; else receiverId = "886986123102";
             try {
-                if (mCallerAddress==null || mCallerAddress.length()<1) { //這是 outgoing call
-                    receiverId = mReceiverIccid;
-                    //開始撥打電話
-                    //mCall = mLinphoneCore.invite("sip:" + receiverId + "@" + mSIPDomain);
-                    String sipAccountPrefix = Utility.getMySetting(myContext, "sipAccountPrefix");
-                    if (sipAccountPrefix!=null && sipAccountPrefix.length()>0) receiverId = sipAccountPrefix + receiverId;
-                    LinphoneAddress la = LinphoneCoreFactory.instance().createLinphoneAddress(receiverId, mSIPDomain, receiverId + "@" + mSIPDomain);
-                    mCall = mLinphoneCore.invite(la);
-                    mIsConnected = false;
-                }
 
                 long iterateIntervalMs = 50L;
 
                 if (mCall == null) {
-                    Log.d(TAG, "Could not place call to");
-                    //mStatusTextView.setText(getString(R.string.msgFailedToMakeVoiceCall));
+                    Log.d(TAG, "Could not place call to " + mReceiverId);
                     mIsCalling = false;
-                    mIsConnected = false;
-                    mUI_Handler.post(setVoiceChatButtonText);
                     return;
                 } else {
                     if (mCallerAddress==null || mCallerAddress.length()<1) { //這是 outgoing call
-                        Log.d(TAG, "Call to: " + receiverId + "@" + mSIPDomain);
+                        Log.d(TAG, "Chat with: " + mReceiverId + ": " + mReceiverName);
                     }
                     mIsCalling = true;
-                    //mIsConnected = false;
-                    mUI_Handler.post(setVoiceChatButtonText);
 
                     while (mIsCalling) {
-                        if (mLinphoneMiniManager.getRegistrationStatus()!=1 || mLinphoneCore==null || mCall==null){
+                        //if (mLinphoneMiniManager.getRegistrationStatus()!=1 || mLinphoneCore==null || mCall==null){
+                        if (mLinphoneCore==null || mCall==null){
                             mIsCalling = false;
-                            mIsConnected = false;
                             return;
                         }
 
@@ -370,53 +315,39 @@ public class VoiceChatActivity extends AppCompatActivity{
 
                         try {
                             Thread.sleep(iterateIntervalMs);
-                            mUI_Handler.post(updateRegistrationState);
+
+                            mUI_Handler.post(updateCallDuration);
 
                             if (mCall.getState().equals(LinphoneCall.State.CallEnd)
                                     || mCall.getState().equals(LinphoneCall.State.CallReleased)) {
                                 Log.d(TAG, "mCall.getState()=CallEnd or CallReleased");
                                 mIsCalling = false;
-                                mIsConnected = false;
-                                mUI_Handler.post(setVoiceChatButtonText);
+                                Utility.showToast(myContext, getString(R.string.labrlVoiceCallEnd));
                             }
 
                             if (mCall.getState().equals(LinphoneCall.State.StreamsRunning)) {
-                                //Log.d(TAG, "mCall.getState()=StreamsRunning");
                                 mIsCalling = true;
-                                mIsConnected = true;
-                                mUI_Handler.post(setVoiceChatButtonText);
                             }
 
                             if (mCall.getState().equals(LinphoneCall.State.OutgoingRinging)) {
-                                //Log.d(TAG, "mCall.getState()=OutgoingRinging");
                                 mIsCalling = true;
-                                mIsConnected = false;
-                                mUI_Handler.post(setVoiceChatButtonText);
                             }
-
-
                         } catch (InterruptedException var8) {
                             Log.d(TAG, "Interrupted! Aborting");
                             mIsCalling = false;
-                            mIsConnected = false;
-                            //mStatusTextView.setText(getString(R.string.labrlVoiceCallInterrupted));
-                            mUI_Handler.post(setVoiceChatButtonText);
                         }
                     }
-                    if (!LinphoneCall.State.CallEnd.equals(mCall.getState())) {
-                        Log.d(TAG, "Terminating the call");
+                    if (!LinphoneCall.State.CallEnd.equals(mCall.getState()) && !LinphoneCall.State.CallReleased.equals(mCall.getState())) {
+                        Log.d(TAG, "Terminating the call by program");
                         mIsCalling = false;
-                        mIsConnected = false;
-                        mUI_Handler.post(setVoiceChatButtonText);
-                        mLinphoneCore.terminateCall(mCall);
+                        if (mLinphoneCore!=null && mCall!=null) mLinphoneCore.terminateCall(mCall);
                     }
+                    finish();
                 }
             }catch (Exception e){
                 Log.d(TAG, getString(R.string.msgFailedToMakeVoiceCall) + ", error= " + e.toString());
                 Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
                 mIsCalling = false;
-                mIsConnected = false;
-                mUI_Handler.post(setVoiceChatButtonText);
             }
         }
     };
@@ -430,12 +361,34 @@ public class VoiceChatActivity extends AppCompatActivity{
                 if (iState==0) s = getString(R.string.labelRegistrationInProgress);
                 if (iState==1) s = getString(R.string.labelRegistrationOk);
                 if (iState==5) s = getString(R.string.labelRegistrationFailed);
+                if (iState!=1){
+                    Utility.showToast(myContext, getString(R.string.msgNotRegisteredToSIPServer));
+                    mDoVoiceChatBtn.setEnabled(false);
+                }
                 getSupportActionBar().setTitle(s);
                 getActionBar().setTitle(s);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+        }
+    };
+
+    private Runnable hideDoVoiceChatButton=new Runnable () {
+        @Override
+        public void run() {
+            mDoVoiceChatBtn.setVisibility(View.GONE);
+            mCancelVoiceChatBtn.invalidate();
+        }
+    };
+
+    private Runnable updateCallDuration=new Runnable () {
+        @Override
+        public void run() {
+            int i = 0;
+            if (mIsCalling && mCall!=null) i = mCall.getDuration();
+            String s = Utility.secondToHourMinuteSecond(i);
+            mStatusTextView.setText(s);
         }
     };
 

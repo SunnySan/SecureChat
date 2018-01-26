@@ -12,7 +12,7 @@
     <ImageView
         android:id="@+id/userPhotoVoiceChat"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_height="200dp"
         android:src="@mipmap/ic_launcher"
         android:scaleType="centerCrop"/>
 
@@ -38,19 +38,22 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp">
 
-        <Button
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/doVoiceChatBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/labelVoiceCall"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/call_pick_up"
             android:layout_weight="0.37"/>
 
-        <Button
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/cancelVoiceChatBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/labelBack"
-            android:layout_weight="0.37" />
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/call_hang_up"
+            android:layout_weight="0.37"/>
+
     </LinearLayout>
 
 </LinearLayout>

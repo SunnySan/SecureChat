@@ -22,8 +22,8 @@ disable_upnp=1
 playback_dev_id=
 ringer_dev_id=
 capture_dev_id=
-remote_ring=/data/data/org.linphone.mini/files/ringback.wav
-local_ring=/data/data/org.linphone.mini/files/oldphone_mono.wav
+remote_ring=/data/user/0/com.taisys.sc.securechat/files/ringback.wav
+local_ring=/data/user/0/com.taisys.sc.securechat/files/oldphone_mono.wav
 dtmf_player_amp=0.1
 
 [misc]

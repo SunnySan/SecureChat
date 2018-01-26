@@ -38,19 +38,22 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp">
 
-        <Button
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/doVoiceChatIncomingCallBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/labelVoiceChatAcceptCall"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/call_pick_up"
             android:layout_weight="0.37"/>
 
-        <Button
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/cancelVoiceChatIncomingCallBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/labelVoiceChatRejectCall"
-            android:layout_weight="0.37" />
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/call_hang_up"
+            android:layout_weight="0.37"/>
+
     </LinearLayout>
 
 </LinearLayout>

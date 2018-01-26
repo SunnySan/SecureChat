@@ -183,7 +183,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.ViewHo
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         ChatMessage msg = mMessagesList.get(position);
-        Log.d(TAG, "onBindViewHolder, position= " + position + ", decrypted=" + mMessagesList.get(position).getDecryptedByChatRoom() + ", message= " + msg.getMessage() + ", messageType= " + msg.getMessageType());
+        //Log.d(TAG, "onBindViewHolder, position= " + position + ", decrypted=" + mMessagesList.get(position).getDecryptedByChatRoom() + ", message= " + msg.getMessage() + ", messageType= " + msg.getMessageType());
 
         if (holder.imageImageView!=null) {
             //顯示大頭貼

@@ -76,7 +76,7 @@
     <string name="msgFailedToInitializeVoiceChatModule">Failed to initialize voice chat module</string>
     <string name="msgFailedToRegisterVoiceChatAccount">Failed to register voice chat account, you are not able to initiate voice chat</string>
     <string name="msgFailedToMakeVoiceCall">Failed to make voice call</string>
-    <string name="labrlVoiceCallEnd">Call is ended</string>
+    <string name="labrlVoiceCallEnd">Call ended</string>
     <string name="labrlVoiceCallChatting">Voice chatting...</string>
     <string name="labrlVoiceCallRinging">Ringing...</string>
     <string name="labrlVoiceCallInterrupted">Call interrupted! Aborting...</string>
@@ -93,4 +93,5 @@
     <string name="labelRegistrationRetry">Account registration retrying</string>
     <string name="labelRegistrationOk">Account registered</string>
     <string name="labelRegistrationFailed">Account registration failed</string>
+    <string name="msgNotRegisteredToSIPServer">You are not registered to voice chat server, unable to make call</string>
 </resources>

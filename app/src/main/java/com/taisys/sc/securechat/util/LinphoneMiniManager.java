@@ -61,10 +61,11 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             mRegistrationStatus = 0;
             String basePath = mContext.getFilesDir().getAbsolutePath();
             copyAssetsFromPackage(basePath);
-            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+            //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+            mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
             android.util.Log.d(TAG, "sunny 1");
             mLinphoneCore.clearAuthInfos();
-            //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
+            mLinphoneCore.clearProxyConfigs();
             android.util.Log.d(TAG, "sunny 2");
             initLinphoneCoreValues(basePath);
             android.util.Log.d(TAG, "sunny 3");
@@ -152,6 +153,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     }
 
     private void copyAssetsFromPackage(String basePath) throws IOException {
+        android.util.Log.d(TAG, "copyAssetsFromPackage, basePath= " + basePath);
         LinphoneMiniUtils.copyIfNotExist(mContext, R.raw.oldphone_mono, basePath + "/oldphone_mono.wav");
         LinphoneMiniUtils.copyIfNotExist(mContext, R.raw.ringback, basePath + "/ringback.wav");
         LinphoneMiniUtils.copyIfNotExist(mContext, R.raw.toy_mono, basePath + "/toy_mono.wav");
@@ -208,6 +210,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
 
                 Intent intent = new Intent();
                 intent.setClass(mContext, VoiceChatActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtras(bundle);
                 mContext.startActivity(intent);
 

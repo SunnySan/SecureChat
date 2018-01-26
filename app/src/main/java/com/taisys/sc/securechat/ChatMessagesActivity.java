@@ -353,12 +353,12 @@ public class ChatMessagesActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot snap, String prevChildKey) {
                 ChatMessage chatMessage = snap.getValue(ChatMessage.class);
                 chatMessage.setDbKey(snap.getKey());
-                Log.d(TAG, "message arrive db Key=" + snap.getKey());
+                //Log.d(TAG, "message arrive db Key=" + snap.getKey());
 
                 if(chatMessage.getSenderId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()) && chatMessage.getReceiverId().equals(mReceiverId) || chatMessage.getSenderId().equals(mReceiverId) && chatMessage.getReceiverId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid())){
                     chatMessage.setSenderName(mReceiverName);
                     chatMessage.setSenderImage(mReceiverImageUrl);
-                    Log.d(TAG, "child event mReceiverImageUrl=" + mReceiverImageUrl);
+                    //Log.d(TAG, "child event mReceiverImageUrl=" + mReceiverImageUrl);
                     mMessagesList.add(chatMessage);
                     mChatsRecyclerView.scrollToPosition(mMessagesList.size()-1);
                 }

@@ -398,4 +398,44 @@ public class Utility {
         }
     }
 
+    /// <summary>
+    /// 秒數換算:時/分/秒
+    /// </summary>
+    /// <param name="t">秒數</param>
+    /// <returns>format: hh: mm: ss</returns>
+
+    public static String secondToHourMinuteSecond(int t){
+        int ms, s, h, d;
+        ms = 0; s = 0; h = 0; d = 0;
+        String sResult = "";
+        try{
+            ms = t % 60; // 餘秒
+            if (t >= 60){ // 假如"秒"數大於60則繼續運算
+                s = t / 60; //分
+                if (s >= 60){  // 假如"分"數大於60則繼續運算
+                    h = s / 60; //時
+                    s = s % 60; //餘分
+                    if (h >= 24){ // 假如"時"數大於60則繼續運算
+                        d = (h) / 24; //天
+                        h = h % 24; //餘時
+                    }
+                }
+            }
+            sResult = MakesUpZero(String.valueOf(h), 2) + ":" + MakesUpZero(String.valueOf(s), 2) + ":" + MakesUpZero(String.valueOf(ms), 2);
+            if (d>0) sResult = MakesUpZero(String.valueOf(d), 2) + "D  " + sResult;
+        }catch(Exception e){
+            sResult = "";
+        }
+        return sResult;
+    }
+
+    public static String MakesUpZero(String str, int lenSize) {
+        String zero = "0000000000";
+        String returnValue = zero;
+        returnValue = zero + str;
+        return returnValue.substring(returnValue.length() - lenSize);
+    }
+
+
+
 }
