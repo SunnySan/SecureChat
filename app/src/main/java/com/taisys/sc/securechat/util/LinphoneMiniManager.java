@@ -4,13 +4,11 @@ package com.taisys.sc.securechat.util;
  * Created by sunny on 2018/1/23.
  */
 
-import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.taisys.sc.securechat.R;
 import com.taisys.sc.securechat.VoiceChatActivity;
 
@@ -65,12 +63,12 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             copyAssetsFromPackage(basePath);
             mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
             android.util.Log.d(TAG, "sunny 1");
+            mLinphoneCore.clearAuthInfos();
             //mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
             android.util.Log.d(TAG, "sunny 2");
             initLinphoneCoreValues(basePath);
             android.util.Log.d(TAG, "sunny 3");
             //mLinphoneCore.refreshRegisters();
-            mLinphoneCore.clearAuthInfos();
             android.util.Log.d(TAG, "sunny 4");
 
             setUserAgent();
@@ -103,7 +101,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     public void destroy() {
         try {
             mTimer.cancel();
-            mLinphoneCore.destroy();
+            if (mLinphoneCore!=null) mLinphoneCore.destroy();
         }
         catch (RuntimeException e) {
         }
@@ -238,7 +236,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
     public void registrationState(LinphoneCore lc, LinphoneProxyConfig cfg,
                                   RegistrationState cstate, String smessage) {
         android.util.Log.d(TAG, "Registration state: " + cstate + "(" + smessage + ")");
-        android.util.Log.d(TAG, "global state= " + lc.getGlobalState());
+        //android.util.Log.d(TAG, "global state= " + lc.getGlobalState());
         if (cstate.equals(RegistrationState.RegistrationOk)){
             mRegistrationStatus = 1;
         }

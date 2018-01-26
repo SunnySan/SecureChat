@@ -3,7 +3,7 @@
     <string name="msgSystemInfo">System Info.</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="labalBack">Back</string>
+    <string name="labelBack">Back</string>
     <string name="msgPleaseWait">Please wait...</string>
     <string name="msgVerifyPinCode">Verify PIN code...</string>
     <string name="labelPleaseEnterPinCode">Please enter PIN code</string>
@@ -87,4 +87,10 @@
     <string name="msgCoudntFindIncomingCall">Counnot find incoming call</string>
     <string name="msgCannotFindCallerInformation">Cannot find caller information</string>
     <string name="labelUnknown">Unknown</string>
+    <string name="msgFailedToPickUpTheCall">Failed to pickup the call</string>
+    <string name="labelRegistrationNone">Not registered</string>
+    <string name="labelRegistrationInProgress">Registration in progress</string>
+    <string name="labelRegistrationRetry">Account registration retrying</string>
+    <string name="labelRegistrationOk">Account registered</string>
+    <string name="labelRegistrationFailed">Account registration failed</string>
 </resources>

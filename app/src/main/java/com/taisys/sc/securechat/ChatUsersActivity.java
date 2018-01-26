@@ -35,10 +35,15 @@ import java.util.Timer;
 
 public class ChatUsersActivity extends AppCompatActivity {
     private static final String TAG = "SecureChat";
-    //private static final String mVoIPDomain = "taisys.com";
-    //private static final String mVoIPDomain = "sip.linphone.org";
-    //private static final String mVoIPDomain = "taisys.onsip.com";
-    private static final String mVoIPDomain = "iptel.org";
+    //private static final String mSIPDomain = "taisys.com";
+    //private static final String mSIPDomain = "sip.linphone.org";
+    //private static final String mSIPDomain = "taisys.onsip.com";
+
+    //private static final String mSIPDomain = "iptel.org";
+    //private static final String mSIPProxyServer = "sip.iptel.org";
+
+    private String mSIPDomain = "";
+    private String mSIPProxyServer = "";
 
     //private static final String mDefaultPassword = "taisys123456";
     private static final String mDefaultPassword = "111111";
@@ -70,6 +75,8 @@ public class ChatUsersActivity extends AppCompatActivity {
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
+        mSIPDomain = Utility.getMySetting(this, "sipDomain");
+        mSIPProxyServer = Utility.getMySetting(this, "sipProxy");
         mLinphoneMiniManager = App.getLinphoneManager();
         //mLinphoneMiniManager = new LinphoneMiniManager(this);
         mLinphoneCore = mLinphoneMiniManager.getLinphoneCore();
@@ -239,18 +246,20 @@ public class ChatUsersActivity extends AppCompatActivity {
         String myID = mAuth.getCurrentUser().getUid();
         //if (myID.equals("h1E5YDjxhURJcDUO4m1eOJBpbXQ2")) myID = "886986123101"; else myID = "886986123102";
         myID = Utility.getMySetting(this, "iccid");
-        myID = "8" + myID;
-        String identity = "sip:" + myID + "@" + mVoIPDomain;
+        //myID = "8" + myID;
+        String sipAccountPrefix = Utility.getMySetting(this, "sipAccountPrefix");
+        if (sipAccountPrefix!=null && sipAccountPrefix.length()>0) myID = sipAccountPrefix + myID;
+        String identity = "sip:" + myID + "@" + mSIPDomain;
         try {
-            LinphoneProxyConfig proxyConfig = mLinphoneCore.createProxyConfig(identity, mVoIPDomain, null, true);
+            LinphoneProxyConfig proxyConfig = mLinphoneCore.createProxyConfig(identity, mSIPProxyServer, null, true);
             proxyConfig.setExpires(300);
 
             mLinphoneCore.addProxyConfig(proxyConfig);
 
             LinphoneAuthInfo authInfo = LinphoneCoreFactory.instance().createAuthInfo(
-                    myID, mDefaultPassword, null, mVoIPDomain);
+                    myID, mDefaultPassword, null, mSIPDomain);
             mLinphoneCore.addAuthInfo(authInfo);
-            mLinphoneCore.setDefaultProxyConfig(proxyConfig);
+            //mLinphoneCore.setDefaultProxyConfig(proxyConfig);
             Log.d(TAG, "registered SIP account successfully, account name= " + identity);
 
         }catch (Exception e){

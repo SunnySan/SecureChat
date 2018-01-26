@@ -45,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         Utility.setMySetting(myContext, "iccid", "");   //先把程式裡的 iccid 設定清除
+        Utility.setMySetting(myContext, "sipDomain", "sip.antisip.com");    //SIP VoIP使用
+        //Utility.setMySetting(myContext, "sipProxy", "sip.antisip.com:9091");   //SIP VoIP使用
+        Utility.setMySetting(myContext, "sipProxy", "sip.antisip.com");   //SIP VoIP使用
+        Utility.setMySetting(myContext, "sipAccountPrefix", "");   //SIP VoIP使用，要加在帳號(ICCID)前面的字元
         setOnClickListener();
 
         PermissionGen.with(this)
@@ -76,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             mCard.CloseSEService();
         }
         Log.d(TAG, "destroy Linphone...");
+        if (App.getLinphoneManager().getLinphoneCore()!=null) App.getLinphoneManager().getLinphoneCore().clearAuthInfos();
         App.getLinphoneManager().destroy(); //把VoIP關掉
 
         Utility.showToast(myContext, "clean data...");
@@ -240,10 +245,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cleanDataAndExitApp(){
-        Log.d(TAG, "About to leave APP...");
+        Log.d(TAG, "going to leave APP...");
         if (mCard!=null){
             mCard.CloseSEService();
         }
+        App.getLinphoneManager().destroy(); //把VoIP關掉
         //Utility.showToast(myContext, "clean data...");
         //finish();
         System.exit(0); //將程式結束，下次進來需重新輸入PIN code做驗證
