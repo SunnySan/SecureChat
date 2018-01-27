@@ -35,10 +35,8 @@ import java.util.Timer;
 
 public class ChatUsersActivity extends AppCompatActivity {
     private static final String TAG = "SecureChat";
-    //private static final String mSIPDomain = "taisys.com";
     //private static final String mSIPDomain = "sip.linphone.org";
     //private static final String mSIPDomain = "taisys.onsip.com";
-
     //private static final String mSIPDomain = "iptel.org";
     //private static final String mSIPProxyServer = "sip.iptel.org";
 
