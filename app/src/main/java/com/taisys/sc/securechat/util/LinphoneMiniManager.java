@@ -46,6 +46,9 @@ import java.util.TimerTask;
 
 public class LinphoneMiniManager implements LinphoneCoreListener {
     private static final String TAG = "SecureChat";
+    private static final String ringtoneName = "toy_mono.wav"; //有電話撥入時的震鈴聲
+    private static final String ringbacktoneName = "ringback.wav"; //撥出電話時聽到的鈴聲
+
     
     private static LinphoneMiniManager mInstance;
     private Context mContext;
@@ -78,6 +81,12 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             startIterate();
             mInstance = this;
             android.util.Log.d(TAG, "sunny 6");
+
+            //設定受話及發話時的鈴聲
+            android.util.Log.d(TAG, "set ringtone file =  " + basePath + "/" + ringtoneName);
+            mLinphoneCore.setRing(basePath + "/" + ringtoneName);
+            android.util.Log.d(TAG, "set ringbacktone file =  " + basePath + "/" + ringbacktoneName);
+            mLinphoneCore.setRingback(basePath + "/" + ringbacktoneName);
 
             mLinphoneCore.setMaxCalls(3);
             mLinphoneCore.setNetworkReachable(true); // Let's assume it's true

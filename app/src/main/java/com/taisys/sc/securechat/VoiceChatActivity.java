@@ -33,8 +33,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class VoiceChatActivity extends AppCompatActivity{
     private static final String TAG = "SecureChat";
-    private static final int ringtoneOutgoing = R.raw.ringtone_04;  //撥出電話時聽到的鈴聲
-    private static final int ringtoneIncoming = R.raw.ringtone_03;  //有電話撥入時的震鈴聲
 
     //private static final String mSIPDomain = "sip.linphone.org";
     //private static final String mSIPDomain = "iptel.org";
@@ -131,7 +129,6 @@ public class VoiceChatActivity extends AppCompatActivity{
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         try {
-            stopRingtone();
             if (mIsCalling){
                 Log.i(TAG, "onDestroy terminate call");
                 if (mCall!=null) mLinphoneCore.terminateCall(mCall);
@@ -154,7 +151,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                 return;
             }
             mStatusTextView.setText(getString(R.string.labrlVoiceCallRinging));
-            playRingtone(ringtoneIncoming);
         }else{
             displayUserNameAndPicture();
         }
@@ -256,7 +252,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                     try {
                         if (mCall!=null){
                             Log.d(TAG, "OnClick, this is incoming call, user accept call");
-                            stopRingtone();
                             mLinphoneCore.acceptCall(mCall);
                             mIsCalling = true;
                             mUI_Handler.post(hideDoVoiceChatButton);
@@ -269,7 +264,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                         finish();
                     }
                 }else{
-                    playRingtone(ringtoneOutgoing);
                     doCallOut();
                 }
             }
@@ -291,7 +285,6 @@ public class VoiceChatActivity extends AppCompatActivity{
             mUI_Handler.post(hideDoVoiceChatButton);
             mThreadHandler.post(doVoiceChat);
         }catch (Exception e){
-            stopRingtone();
             mIsCalling = false;
             Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
             if (mCall!=null) mLinphoneCore.terminateCall(mCall);
@@ -330,6 +323,11 @@ public class VoiceChatActivity extends AppCompatActivity{
 
                             mUI_Handler.post(updateCallDuration);
 
+                            if (mCall.getState().equals(LinphoneCall.State.Connected)) {
+                                mIsCalling = true;
+                                Log.d(TAG, "mCall.getState()=Connected");
+                            }
+
                             if (mCall.getState().equals(LinphoneCall.State.CallEnd)
                                     || mCall.getState().equals(LinphoneCall.State.CallReleased)) {
                                 Log.d(TAG, "mCall.getState()=CallEnd or CallReleased");
@@ -338,7 +336,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                             }
 
                             if (mCall.getState().equals(LinphoneCall.State.StreamsRunning)) {
-                                stopRingtone();
                                 mIsCalling = true;
                             }
 
@@ -347,7 +344,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                             }
                         } catch (InterruptedException var8) {
                             Log.d(TAG, "Interrupted! Aborting");
-                            stopRingtone();
                             mIsCalling = false;
                         }
                     }
@@ -360,7 +356,6 @@ public class VoiceChatActivity extends AppCompatActivity{
                 }
             }catch (Exception e){
                 Log.d(TAG, getString(R.string.msgFailedToMakeVoiceCall) + ", error= " + e.toString());
-                stopRingtone();
                 Utility.showMessage(myContext, getString(R.string.msgFailedToMakeVoiceCall));
                 mIsCalling = false;
             }
@@ -406,19 +401,5 @@ public class VoiceChatActivity extends AppCompatActivity{
             mStatusTextView.setText(s);
         }
     };
-
-    private void playRingtone(int toneFile){
-        stopRingtone();
-        mp=MediaPlayer.create(this, toneFile);
-        mp.setLooping(true);
-        mp.start();
-    }
-
-    private void stopRingtone(){
-        if (mp!=null){
-            mp.release();
-            mp = null;
-        }
-    }
 
 }
