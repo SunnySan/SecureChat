@@ -88,6 +88,9 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
             android.util.Log.d(TAG, "set ringbacktone file =  " + basePath + "/" + ringbacktoneName);
             mLinphoneCore.setRingback(basePath + "/" + ringbacktoneName);
 
+            //設定加密
+            mLinphoneCore.setMediaEncryption(LinphoneCore.MediaEncryption.ZRTP);
+
             mLinphoneCore.setMaxCalls(3);
             mLinphoneCore.setNetworkReachable(true); // Let's assume it's true
             mLinphoneCore.enableVideo(false, false);

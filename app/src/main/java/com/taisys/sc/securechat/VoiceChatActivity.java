@@ -8,7 +8,6 @@ import android.os.HandlerThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -295,6 +294,7 @@ public class VoiceChatActivity extends AppCompatActivity{
     private Runnable doVoiceChat=new Runnable () {
         @Override
         public void run() {
+            //LinphoneCore.MediaEncryption mediaEncryption;
             try {
 
                 long iterateIntervalMs = 50L;
@@ -337,6 +337,8 @@ public class VoiceChatActivity extends AppCompatActivity{
 
                             if (mCall.getState().equals(LinphoneCall.State.StreamsRunning)) {
                                 mIsCalling = true;
+                                //mediaEncryption = mCall.getCurrentParams().getMediaEncryption();
+                                //Log.d(TAG, "MediaEncryption= " + mediaEncryption);    //應為 ZRTP
                             }
 
                             if (mCall.getState().equals(LinphoneCall.State.OutgoingRinging)) {
